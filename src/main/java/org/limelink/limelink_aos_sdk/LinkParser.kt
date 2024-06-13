@@ -15,4 +15,10 @@ object LinkParser {
         }
         return queryParams
     }
+
+    fun parsePathParams(url: String): String {
+        val uri = Uri.parse(url)
+        val pathSegments = uri.pathSegments
+        return pathSegments[2] // https://example.com/example/product/{pathParam}
+    }
 }
