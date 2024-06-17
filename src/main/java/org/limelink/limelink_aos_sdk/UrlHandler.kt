@@ -1,7 +1,8 @@
-package src.main.java.org.limelink.limelink_aos_sdk
+package org.limelink.limelink_aos_sdk
 
 import android.content.Intent
 import android.net.Uri
+import org.limelink.limelink_aos_sdk.response.PathParamResponse
 
 object UrlHandler {
     private fun getUrlFromIntent(intent: Intent): String? {
@@ -27,10 +28,10 @@ object UrlHandler {
         return queryParams
     }
 
-    fun parsePathParams(intent: Intent): PathParams {
-        val url = getUrlFromIntent(intent) ?: return PathParams()
+    fun parsePathParams(intent: Intent): PathParamResponse {
+        val url = getUrlFromIntent(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
         val uri = Uri.parse(url)
         val pathSegments = uri.pathSegments
-        return PathParams(mainPath = pathSegments[0], subPath = pathSegments[2])
+        return PathParamResponse(mainPath = pathSegments[0], subPath = pathSegments[2])
     }
 }
