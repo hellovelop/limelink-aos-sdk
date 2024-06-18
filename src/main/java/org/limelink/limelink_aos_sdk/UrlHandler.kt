@@ -5,7 +5,7 @@ import android.net.Uri
 import org.limelink.limelink_aos_sdk.response.PathParamResponse
 
 object UrlHandler {
-    private const val MAIN_URL_KEY = "originalUrl"
+    private const val MAIN_URL_KEY = "original-url"
 
     /*기본 url 추출 */
     private fun getUrlFromIntent(intent: Intent): String? {
