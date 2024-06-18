@@ -2,9 +2,8 @@ package org.limelink.limelink_aos_sdk
 
 import android.content.Context
 import android.content.Intent
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.limelink.limelink_aos_sdk.enums.EventType
 import org.limelink.limelink_aos_sdk.request.LimeLinkRequest
 import org.limelink.limelink_aos_sdk.response.PathParamResponse
@@ -25,7 +24,7 @@ object LinkStats {
 }
 
 suspend fun saveLimeLinkStatus(context: Context, intent: Intent, privateKey: String) {
-    val pathParamResponse: PathParamResponse = UrlHandler.parsePathParams(intent)
+    val pathParamResponse: PathParamResponse = parsePathParams(intent)
 
     if (pathParamResponse.mainPath.isEmpty()) {
         return
@@ -53,13 +52,13 @@ private fun createLimeLinkRequest(
 private suspend fun sendLimeLinkAsync(limeLinkRequest: LimeLinkRequest) {
     val apiService = RetrofitClient.apiService
 
-    CoroutineScope(Dispatchers.IO).launch {
-        try {
+    try {
+        withContext(Dispatchers.IO) {
             apiService.sendLimeLink(limeLinkRequest)
             // 네트워크 요청 성공, 응답값을 신경 쓰지 않음
-        } catch (e: Exception) {
-            // 네트워크 요청 실패 처리
-            e.printStackTrace()
         }
+    } catch (e: Exception) {
+        // 네트워크 요청 실패 처리
+        e.printStackTrace()
     }
 }
