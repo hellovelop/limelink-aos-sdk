@@ -1,43 +1,147 @@
-# Project Name
-
-limelink-aos-sdk
-
-## Getting Started
-
-This section guides you on how to set up and run this project locally.
-
-### Prerequisites
-
-
-1. API Permissions and Consent:
-• Internet Permission: To call external APIs, you need to declare the INTERNET permission in the AndroidManifest.xml file.
+# Prerequisites
+Add the following items to the ***AndroidManifest.xml*** file
 ```xml
-<uses-permission android:name="android.permission.INTERNET" />
-```
-• Privacy Law and User Consent: If the data collected through external API calls is considered personal information, explicit user consent may be required. For example, under GDPR in Europe or the Personal Information Protection Act in Korea, users must be clearly informed about what data is being collected and how it will be used, and they must give their consent.
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example.app">
+    
+    <!--Example-->
+   <uses-permission android:name="android.permission.INTERNET" />
 
-2. Network Security Configuration:
-   • Use HTTPS Instead of HTTP: It is recommended to use HTTPS for external API calls to ensure security.
-   • Network Security Configuration: Starting from API 28 (Android 9.0 Pie), Cleartext (HTTP) is blocked by default. Explicitly configure the network security settings.
-```xml
-<application
-    android:networkSecurityConfig="@xml/network_security_config">
-</application>
+    <!--Example-->
+   <application
+       android:networkSecurityConfig="@xml/network_security_config">
+   </application>
+   
+</manifest>
 ```
-Create the res/xml/network_security_config.xml file:
+- Internet Permission: To call external APIs, you need to declare the INTERNET permission in the ***AndroidManifest.xml*** file.
+- Network Security Configuration: Starting from API 28 (Android 9.0 Pie), Cleartext (HTTP) is blocked by default. Explicitly configure the network security settings.
+
+Create the ***res/xml/network_security_config.xml*** file:
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
+<!--Example-->
+
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
+    <!-- Default configuration: Allow cleartext traffic for all domains -->
+    <base-config cleartextTrafficPermitted="true" />
+
+    <!-- Domain-specific configuration: Optional -->
+    <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">limelink.org</domain>
-        <domain includeSubdomains="true">deep.limelink.org</domain>
     </domain-config>
 </network-security-config>
 ```
+- In this configuration, base-config allows unencrypted traffic for all domains, whereas domain-config is set to permit HTTPS only for a specific domain (limelink.org).
 
 By adhering to the above guidelines, Android developers should face minimal issues when integrating and using an SDK for calling external APIs.
 
 
-# SDK Integration Guide
+# Getting Started
 
-This guide provides essential steps and best practices for integrating our SDK, which includes making external API calls. Please ensure you follow these instructions carefully to avoid any issues.
+This section guides you on how to set up and run this project locally.
+
+### Step 1: Add the JitPack repository to your build file
+Add it in your root ***build.gradle*** at the end of repositories:
+```gradle
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+### Step 2: Add the dependency
+```gradle
+dependencies {
+    implementation 'com.github.hellovelope:limelink-aos-sdk:main'
+}
+```
+- Please refer to [*here](https://jitpack.io/#hellovelope/limelink-aos-sdk/1.0.0-1-gf3b1b3e-SNAPSHOT) for **maven**, **sbt**, or **leiningen**.
+
+### Step 3: Manifest file configuration
+In the AndroidManifest.xml file, add an intent filter to the MainActivity to handle URLs like schem://example
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.example.app">
+    
+   <uses-permission android:name="android.permission.INTERNET" />
+
+   <application
+       android:networkSecurityConfig="@xml/network_security_config">
+
+       <!--Example-->
+       <activity android:name=".MainActivity">
+           <intent-filter>
+               <action android:name="android.intent.action.VIEW"/>
+
+               <category android:name="android.intent.category.DEFAULT"/>
+               <category android:name="android.intent.category.BROWSABLE"/>
+
+               <data android:scheme="schem" android:host="example"/>
+           </intent-filter>
+       </activity>
+   </application>
+   
+</manifest>
+```
+
+# SDK Usage Guide
+### Save statistical information
+Open ***MainActivity.kt*** and add the following code
+```kt
+package com.example.myapp
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.limelink.limelink_aos_sdk.LinkStats
+
+class MainActivity : AppCompatActivity() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        /*Example*/
+        val privateKey = "your_private_key"
+        saveLimeLinkStatus(this, intent, privateKey)
+    }
+}
+```
+- This way, you can save information about the first run or relaunch of the app. You can check the actual metrics on the https://limelink.org console.
+- The privateKey value is required. If you don't have it, obtain it from the https://limelink.org console and use it.
+
+### Use handle information superficially
+Open ***MainActivity.kt*** and add the following code
+
+```kt
+package com.example.myapp
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.limelink.limelink_aos_sdk.response.PathParamResponse
+
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        /*Example*/
+        val pathParamResponse: PathParamResponse = UrlHandler.parsePathParams(intent)
+        val suffix: String = pathParamResponse.getMainPath()
+
+        /*Use the handle values to navigate to the desired screen. */
+        val handle: String = pathParamResponse.getSubPath()
+        if (handle == "example") {
+            //Navigate to the desired screen
+        }
+    }
+}
+```
+- This way, you can handle the information superficially and navigate to the desired screen based on the handle value.
