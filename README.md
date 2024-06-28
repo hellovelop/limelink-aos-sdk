@@ -1,3 +1,8 @@
+# LimeLink Android SDK
+<img src="https://limelink.org/assets/default_lime-C14nNSvc.svg" alt="이미지 설명" width="300" height="200">
+
+This is a dedicated limelink dynamic link library.
+The limelink SDK is used to save statistics related to the first run or relaunch of the app, or to control handle values specified for each dynamic link through the https://limelink.org console.
 # Prerequisites
 Add the following items to the ***AndroidManifest.xml*** file
 ```xml
