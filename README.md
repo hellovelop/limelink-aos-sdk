@@ -4,7 +4,11 @@
 This is a dedicated limelink dynamic link library.
 The limelink SDK is used to save statistics related to the first run or relaunch of the app, or to control handle values specified for each dynamic link through the https://limelink.org console.
 
-# Prerequisites
+# Getting Started
+
+This section guides you on how to set up and run this project locally.
+
+### Installation and requirements
 Add the following items to the ***AndroidManifest.xml*** file
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -42,10 +46,6 @@ Create the ***res/xml/network_security_config.xml*** file:
 
 By adhering to the above guidelines, Android developers should face minimal issues when integrating and using an SDK for calling external APIs.
 
-
-# Getting Started
-
-This section guides you on how to set up and run this project locally.
 
 ### Step 1: Add the JitPack repository to your build file
 Add it in your root ***build.gradle*** at the end of repositories:
@@ -92,6 +92,8 @@ In the AndroidManifest.xml file, add an intent filter to the MainActivity to han
    
 </manifest>
 ```
+If it's completed, let's refer to the SDK Usage Guide and create it.
+
 
 # SDK Usage Guide
 ### Save statistical information
