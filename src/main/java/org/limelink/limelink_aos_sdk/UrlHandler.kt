@@ -45,5 +45,5 @@ fun parsePathParams(intent: Intent): PathParamResponse {
     val url = UrlHandler.getSchemeFromIntent(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
     val uri = Uri.parse(url)
     val pathSegments = uri.pathSegments
-    return PathParamResponse(mainPath = pathSegments[0], subPath = pathSegments[2])
+    return PathParamResponse(mainPath = pathSegments[1], subPath = pathSegments[2])
 }
