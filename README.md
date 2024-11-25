@@ -64,7 +64,7 @@ dependencies {
     implementation 'com.github.hellovelope:limelink-aos-sdk:main'
 }
 ```
-- Please refer to [*here] ([https://jitpack.io/#hellovelope/limelink-aos-sdk/1.0.0-1-gf3b1b3e-SNAPSHOT](https://jitpack.io/#hellovelope/limelink-aos-sdk]) for **maven**, **sbt**, or **leiningen**.
+- Please refer to [*here] (https://jitpack.io/#hellovelope/limelink-aos-sdk/0.0.3) for **maven**, **sbt**, or **leiningen**.
 
 ### Step 3: Manifest file configuration
 In the AndroidManifest.xml file, add an intent filter to the MainActivity to handle URLs like schem://example
