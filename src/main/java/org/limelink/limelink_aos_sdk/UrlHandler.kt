@@ -24,26 +24,26 @@ object UrlHandler {
             null
         }
     }
-}
 
-fun parseQueryParams(intent: Intent): Map<String, String> {
-    val url = UrlHandler.getSchemeFromIntent(intent) ?: return emptyMap()
+    fun parseQueryParams(intent: Intent): Map<String, String> {
+        val url = UrlHandler.getSchemeFromIntent(intent) ?: return emptyMap()
 
-    val uri = Uri.parse(url)
-    val queryParameterNames = uri.queryParameterNames
-    val queryParams = mutableMapOf<String, String>()
+        val uri = Uri.parse(url)
+        val queryParameterNames = uri.queryParameterNames
+        val queryParams = mutableMapOf<String, String>()
 
-    for (param in queryParameterNames) {
-        uri.getQueryParameter(param)?.let {
-            queryParams[param] = it
+        for (param in queryParameterNames) {
+            uri.getQueryParameter(param)?.let {
+                queryParams[param] = it
+            }
         }
+        return queryParams
     }
-    return queryParams
-}
 
-fun parsePathParams(intent: Intent): PathParamResponse {
-    val url = UrlHandler.getSchemeFromIntent(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
-    val uri = Uri.parse(url)
-    val pathSegments = uri.pathSegments
-    return PathParamResponse(mainPath = pathSegments[1], subPath = pathSegments[2])
+    fun parsePathParams(intent: Intent): PathParamResponse {
+        val url = UrlHandler.getSchemeFromIntent(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
+        val uri = Uri.parse(url)
+        val pathSegments = uri.pathSegments
+        return PathParamResponse(mainPath = pathSegments[1], subPath = pathSegments[2])
+    }
 }

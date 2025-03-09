@@ -85,7 +85,7 @@ In the AndroidManifest.xml file, add an intent filter to the MainActivity to han
                <category android:name="android.intent.category.DEFAULT"/>
                <category android:name="android.intent.category.BROWSABLE"/>
 
-               <data android:scheme="schem" android:host="example"/>
+               <data android:scheme="https" android:host="deep.limelink.org"/>
            </intent-filter>
        </activity>
    </application>
