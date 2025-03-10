@@ -84,8 +84,8 @@ In the AndroidManifest.xml file, add an intent filter to the MainActivity to han
 
                <category android:name="android.intent.category.DEFAULT"/>
                <category android:name="android.intent.category.BROWSABLE"/>
-
-               <data android:scheme="https" android:host="deep.limelink.org"/>
+          <!--Please enter the domain address you want.-->
+               <data android:scheme="https" android:host="customdomain.com"/>
            </intent-filter>
        </activity>
    </application>
@@ -93,6 +93,8 @@ In the AndroidManifest.xml file, add an intent filter to the MainActivity to han
 </manifest>
 ```
 If it's completed, let's refer to the SDK Usage Guide and create it.
+For more details, please refer to the official document below.
+[*official link](https://developer.android.com/training/app-links/verify-android-applinks)
 
 
 # SDK Usage Guide
