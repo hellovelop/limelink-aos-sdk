@@ -93,9 +93,7 @@ In the AndroidManifest.xml file, add an intent filter to the MainActivity to han
 </manifest>
 ```
 If it's completed, let's refer to the SDK Usage Guide and create it. 
-
 For more details, please refer to the official document below. 
-
 [*official link](https://developer.android.com/training/app-links/verify-android-applinks)
 
 
