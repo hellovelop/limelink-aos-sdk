@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.limelink.limelink_aos_sdk.UrlHandler.parsePathParams
 import org.limelink.limelink_aos_sdk.enums.EventType
 import org.limelink.limelink_aos_sdk.request.LimeLinkRequest
 import org.limelink.limelink_aos_sdk.response.PathParamResponse
