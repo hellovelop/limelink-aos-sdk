@@ -32,4 +32,3 @@
 -keepclassmembers class * implements java.io.Serializable { *; }
 
 -keep class org.limelink.limelink_aos_sdk.service.RetrofitClient { *; }
--keep class org.limelink.limelink_aos_sdk.service.limelink.ApiService { *; }
