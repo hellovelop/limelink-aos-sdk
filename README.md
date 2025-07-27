@@ -97,6 +97,87 @@ If it's completed, let's refer to the SDK Usage Guide and create it.
 
 
 # SDK Usage Guide
+
+## Universal Link Handling
+
+### Universal Link Setup
+Add the following configuration to your AndroidManifest.xml to handle Universal Links:
+
+```xml
+<activity android:name=".MainActivity">
+    <intent-filter android:autoVerify="true">
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:scheme="https" android:host="*.limelink.org"/>
+    </intent-filter>
+</activity>
+```
+
+### Universal Link Usage
+How to handle Universal Links in MainActivity:
+
+```kt
+package com.example.myapp
+
+import android.content.Intent
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import org.limelink.limelink_aos_sdk.LimeLinkSDK
+
+class MainActivity : AppCompatActivity() {
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        
+        // Handle Universal Link in onCreate
+        handleIntent(intent)
+    }
+    
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        
+        // Handle Universal Link in onNewIntent (when app is already running)
+        intent?.let { handleIntent(it) }
+    }
+    
+    private fun handleIntent(intent: Intent) {
+        // Check if it's a Universal Link and handle it
+        if (LimeLinkSDK.isUniversalLink(intent)) {
+            LimeLinkSDK.handleUniversalLink(this, intent) { success ->
+                if (success) {
+                    // Handle success
+                    println("Universal Link handled successfully")
+                } else {
+                    // Handle failure
+                    println("Universal Link handling failed")
+                }
+            }
+        } else {
+            // Handle regular intent
+            handleCustomScheme(intent)
+        }
+    }
+    
+    private fun handleCustomScheme(intent: Intent) {
+        // Handle existing custom scheme
+        val originalUrl = LimeLinkSDK.getSchemeFromIntent(intent)
+        originalUrl?.let {
+            // URL processing logic
+        }
+    }
+}
+```
+
+### Universal Link Flow
+1. User clicks a URL in the format `https://{suffix}.limelink.org`
+2. SDK extracts the `{suffix}` part from the URL
+3. Calls the API `https://limelink.org/universal-link/app/dynamic_link/{suffix}`
+4. Receives `request_uri` from API response and automatically redirects to that URL
+5. If suffix is not found or request_uri is missing, returns 404 error
+
+
 ### Save statistical information
 Open ***MainActivity.kt*** and add the following code
 ```kt
