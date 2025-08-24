@@ -4,9 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import org.junit.Test
 import org.junit.Assert.*
-import retrofit2.HttpException
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.ResponseBody.Companion.toResponseBody
 
 /**
  * Universal Link handler test class
@@ -14,22 +11,35 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 class UniversalLinkHandlerTest {
     
     @Test
-    fun `test isUniversalLink with valid universal link`() {
+    fun `test isUniversalLink with valid subdomain pattern`() {
         // Given
-        val uri = Uri.parse("https://test.limelink.org")
+        val uri = Uri.parse("https://test.limelink.org/link/abc123")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
         val result = UniversalLinkHandler.isUniversalLink(intent)
         
         // Then
-        assertTrue("Should be a valid Universal Link", result)
+        assertTrue("Should be a valid Universal Link with subdomain pattern", result)
+    }
+    
+    @Test
+    fun `test isUniversalLink with valid legacy deeplink`() {
+        // Given
+        val uri = Uri.parse("https://deep.limelink.org/link/subdomain=test&path=abc123&platform=android")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        
+        // When
+        val result = UniversalLinkHandler.isUniversalLink(intent)
+        
+        // Then
+        assertTrue("Should be a valid Universal Link with legacy deeplink", result)
     }
     
     @Test
     fun `test isUniversalLink with invalid scheme`() {
         // Given
-        val uri = Uri.parse("http://test.limelink.org")
+        val uri = Uri.parse("http://test.limelink.org/link/abc123")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
@@ -42,7 +52,7 @@ class UniversalLinkHandlerTest {
     @Test
     fun `test isUniversalLink with different host`() {
         // Given
-        val uri = Uri.parse("https://test.example.com")
+        val uri = Uri.parse("https://test.example.com/link/abc123")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
@@ -65,62 +75,67 @@ class UniversalLinkHandlerTest {
     }
     
     @Test
-    fun `test extractSuffixFromUrl with valid url`() {
+    fun `test isUniversalLink with old format without link path`() {
         // Given
-        val uri = Uri.parse("https://test123.limelink.org")
+        val uri = Uri.parse("https://test.limelink.org")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
-        val suffix = UniversalLinkHandler::class.java
-            .getDeclaredMethod("extractSuffixFromUrl", Intent::class.java)
-            .apply { isAccessible = true }
-            .invoke(UniversalLinkHandler, intent) as String?
+        val result = UniversalLinkHandler.isUniversalLink(intent)
         
         // Then
-        assertEquals("test123", suffix)
+        assertFalse("Old format without /link/ path should not be valid", result)
     }
     
     @Test
-    fun `test extractSuffixFromUrl with complex suffix`() {
+    fun `test isUniversalLink with valid subdomain but invalid path`() {
         // Given
-        val uri = Uri.parse("https://my-app-123.limelink.org")
+        val uri = Uri.parse("https://test.limelink.org/invalid/path")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
-        val suffix = UniversalLinkHandler::class.java
-            .getDeclaredMethod("extractSuffixFromUrl", Intent::class.java)
-            .apply { isAccessible = true }
-            .invoke(UniversalLinkHandler, intent) as String?
+        val result = UniversalLinkHandler.isUniversalLink(intent)
         
         // Then
-        assertEquals("my-app-123", suffix)
+        assertTrue("Should be valid if host matches, path validation happens later", result)
     }
     
     @Test
-    fun `test extractSuffixFromUrl with invalid url`() {
+    fun `test isUniversalLink with deep.limelink.org but different path`() {
         // Given
-        val uri = Uri.parse("https://limelink.org")
+        val uri = Uri.parse("https://deep.limelink.org/some/other/path")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
         // When
-        val suffix = UniversalLinkHandler::class.java
-            .getDeclaredMethod("extractSuffixFromUrl", Intent::class.java)
-            .apply { isAccessible = true }
-            .invoke(UniversalLinkHandler, intent) as String?
+        val result = UniversalLinkHandler.isUniversalLink(intent)
         
         // Then
-        assertNull("Should return null for invalid URL", suffix)
+        assertTrue("Should be valid if host is deep.limelink.org", result)
     }
     
     @Test
-    fun `test handleUniversalLink with 404 error`() {
+    fun `test isUniversalLink with complex subdomain`() {
         // Given
-        val uri = Uri.parse("https://nonexistent.limelink.org")
+        val uri = Uri.parse("https://my-app-123.limelink.org/link/complex-suffix")
         val intent = Intent(Intent.ACTION_VIEW, uri)
         
-        // When & Then
-        // This test would require mocking the API service
-        // For now, we just verify the method exists and handles HttpException
-        assertTrue("Method should handle HttpException gracefully", true)
+        // When
+        val result = UniversalLinkHandler.isUniversalLink(intent)
+        
+        // Then
+        assertTrue("Should be valid with complex subdomain", result)
+    }
+    
+    @Test
+    fun `test isUniversalLink with multiple dots in subdomain`() {
+        // Given
+        val uri = Uri.parse("https://test.example.limelink.org/link/abc123")
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        
+        // When
+        val result = UniversalLinkHandler.isUniversalLink(intent)
+        
+        // Then
+        assertTrue("Should be valid with multiple dots in subdomain", result)
     }
 } 

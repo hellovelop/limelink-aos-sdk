@@ -22,17 +22,17 @@ object LimeLinkSDK {
      * 
      * @param context Android context
      * @param intent Universal Link intent
-     * @param callback Callback to receive processing result (optional)
+     * @param callback Callback to receive processing result with URI (optional)
      */
     fun handleUniversalLink(
         context: Context, 
         intent: Intent, 
-        callback: ((Boolean) -> Unit)? = null
+        callback: ((String?) -> Unit)? = null
     ) {
         // Check if it's a Universal Link format
         if (!UniversalLinkHandler.isUniversalLink(intent)) {
             Log.d(TAG, "Not a Universal Link format.")
-            callback?.invoke(false)
+            callback?.invoke(null)
             return
         }
         
@@ -50,7 +50,7 @@ object LimeLinkSDK {
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error occurred while processing Universal Link", e)
-                callback?.invoke(false)
+                callback?.invoke(null)
             }
         }
     }

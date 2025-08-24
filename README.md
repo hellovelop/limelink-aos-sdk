@@ -145,10 +145,19 @@ class MainActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         // Check if it's a Universal Link and handle it
         if (LimeLinkSDK.isUniversalLink(intent)) {
-            LimeLinkSDK.handleUniversalLink(this, intent) { success ->
-                if (success) {
-                    // Handle success
-                    println("Universal Link handled successfully")
+            LimeLinkSDK.handleUniversalLink(this, intent) { uri ->
+                if (uri != null) {
+                    // Handle success - you can now use the URI as needed
+                    println("Universal Link URI: $uri")
+                    
+                    // Example: Navigate to the URI
+                    // navigateToUri(uri)
+                    
+                    // Example: Open in browser
+                    // openInBrowser(uri)
+                    
+                    // Example: Parse and handle internally
+                    // handleInternalNavigation(uri)
                 } else {
                     // Handle failure
                     println("Universal Link handling failed")
@@ -171,12 +180,18 @@ class MainActivity : AppCompatActivity() {
 ```
 
 ### Universal Link Flow
-1. User clicks a URL in the format `https://{suffix}.limelink.org`
-2. SDK extracts the `{suffix}` part from the URL
-3. Calls the API `https://limelink.org/universal-link/app/dynamic_link/{suffix}`
-4. Receives `request_uri` from API response and automatically redirects to that URL
-5. If suffix is not found or request_uri is missing, returns 404 error
+1. User clicks a URL in the format `https://{suffix}.limelink.org/link/{link_suffix}`
+2. SDK extracts the `{suffix}` and `{link_suffix}` parts from the URL
+3. Fetches headers from `https://{suffix}.limelink.org` for additional context
+4. Calls the API `https://www.limelink.org/api/v1/dynamic_link/{link_suffix}` with headers
+5. Receives `uri` from API response and automatically redirects to that URL
+6. If link_suffix is not found or uri is missing, returns 404 error
 
+### Legacy Deeplink Support
+For backward compatibility, the SDK also supports the legacy deeplink format:
+1. User clicks a URL in the format `https://deep.limelink.org/link/subdomain={subdomain}&path={path}&platform=android`
+2. SDK calls the API `https://deep.limelink.org/link` with query parameters
+3. Receives `deeplinkUrl` from API response and redirects accordingly
 
 ### Save statistical information
 Open ***MainActivity.kt*** and add the following code
