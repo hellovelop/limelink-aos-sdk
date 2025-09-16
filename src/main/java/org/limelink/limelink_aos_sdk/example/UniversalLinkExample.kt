@@ -37,9 +37,9 @@ class UniversalLinkExample : Activity() {
             Log.d(TAG, "Universal Link detected")
             
             // Handle Universal Link
-            LimeLinkSDK.handleUniversalLink(this, intent) { success ->
-                if (success) {
-                    Log.d(TAG, "Universal Link handled successfully")
+            LimeLinkSDK.handleUniversalLink(this, intent) { result ->
+                if (result != null) {
+                    Log.d(TAG, "Universal Link handled successfully: $result")
                     // Additional processing on success (e.g., notify user)
                 } else {
                     Log.e(TAG, "Universal Link handling failed")

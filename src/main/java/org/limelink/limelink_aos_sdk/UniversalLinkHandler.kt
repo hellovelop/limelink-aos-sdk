@@ -31,7 +31,7 @@ object UniversalLinkHandler {
      * @param intent Universal Link intent
      * @return URI to redirect to, or null if processing failed
      */
-    suspend fun handleUniversalLink(context: Context, intent: Intent): String? {
+    suspend fun handleUniversalLink(_context: Context, intent: Intent): String? {
         return try {
             val uri = intent.data ?: run {
                 Log.e(TAG, "No data in intent")
@@ -78,7 +78,7 @@ object UniversalLinkHandler {
             return null
         }
         
-        val linkSuffix = matcher.group(1)
+        val linkSuffix = matcher.group(1) ?: return null
         Log.d(TAG, "Extracted suffix: $suffix, linkSuffix: $linkSuffix")
         
         // 먼저 서브도메인에서 헤더 정보 가져오기
@@ -142,7 +142,7 @@ object UniversalLinkHandler {
     /**
      * 헤더 정보를 포함한 Universal Link API 호출
      */
-    private suspend fun fetchUniversalLinkWithHeaders(linkSuffix: String, headers: Map<String, String>): String? {
+    private suspend fun fetchUniversalLinkWithHeaders(linkSuffix: String, _headers: Map<String, String>): String? {
         try {
             Log.d(TAG, "Calling Universal Link API with linkSuffix: $linkSuffix")
             
