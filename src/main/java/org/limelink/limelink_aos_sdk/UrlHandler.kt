@@ -26,7 +26,17 @@ object UrlHandler {
     }
 
     fun parseQueryParams(intent: Intent): Map<String, String> {
-        val url = UrlHandler.getSchemeFromIntent(intent) ?: return emptyMap()
+        // 먼저 original-url 파라미터에서 URL을 추출 시도
+        var url = UrlHandler.getSchemeFromIntent(intent)
+        
+        // original-url이 없으면 Intent에서 직접 URL 추출 시도
+        if (url.isNullOrEmpty()) {
+            url = getUrlFromIntent(intent)
+        }
+        
+        if (url.isNullOrEmpty()) {
+            return emptyMap()
+        }
 
         val uri = Uri.parse(url)
         val queryParameterNames = uri.queryParameterNames
@@ -37,6 +47,7 @@ object UrlHandler {
                 queryParams[param] = it
             }
         }
+        
         return queryParams
     }
 
