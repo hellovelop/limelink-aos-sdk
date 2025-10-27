@@ -52,9 +52,26 @@ object UrlHandler {
     }
 
     fun parsePathParams(intent: Intent): PathParamResponse {
-        val url = UrlHandler.getSchemeFromIntent(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
+        // 먼저 original-url 파라미터에서 URL을 추출 시도
+        var url = UrlHandler.getSchemeFromIntent(intent)
+        
+        // original-url이 없으면 Intent에서 직접 URL 추출 시도
+        if (url.isNullOrEmpty()) {
+            url = getUrlFromIntent(intent)
+        }
+        
+        if (url.isNullOrEmpty()) {
+            return PathParamResponse(mainPath = "", subPath = "")
+        }
+        
         val uri = Uri.parse(url)
         val pathSegments = uri.pathSegments
-        return PathParamResponse(mainPath = pathSegments[1], subPath = pathSegments[2])
+        
+        // pathSegments[0] = "link", pathSegments[1] = "toggle-reward" 등
+        // mainPath는 pathSegments[1] (두 번째 요소), subPath는 pathSegments[2] (세 번째 요소, 있을 경우)
+        val mainPath = pathSegments.getOrNull(1) ?: ""
+        val subPath = pathSegments.getOrNull(2)
+        
+        return PathParamResponse(mainPath = mainPath, subPath = subPath)
     }
 }
