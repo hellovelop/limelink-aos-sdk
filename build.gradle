@@ -68,6 +68,9 @@ dependencies {
     
     // Coroutines library for Universal Link processing
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    
+    // Play Install Referrer API
+    implementation 'com.android.installreferrer:installreferrer:2.2'
 }
 
 

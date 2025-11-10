@@ -124,4 +124,57 @@ object LimeLinkSDK {
             }
         }
     }
+    
+    /**
+     * Gets deferred deep link automatically using Play Install Referrer API.
+     * This method retrieves the install referrer, extracts the token, and fetches the deferred deep link.
+     * Use this when the app is launched for the first time after installation.
+     * 
+     * @param context Android context
+     * @param tokenKey Key name for token parameter in referrer (default: "token")
+     * @param callback Callback to receive result (optional)
+     */
+    fun getDeferredDeepLinkFromInstallReferrer(
+        context: Context,
+        tokenKey: String = "token",
+        callback: ((Result<GetDeferredDeepLinkByTokenResponse>) -> Unit)? = null
+    ) {
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Get install referrer
+                val referrerUrl = withContext(Dispatchers.IO) {
+                    InstallReferrerHelper.getInstallReferrer(context)
+                }
+                
+                if (referrerUrl == null) {
+                    Log.d(TAG, "No install referrer found")
+                    callback?.invoke(Result.failure(Exception("No install referrer found")))
+                    return@launch
+                }
+                
+                // Extract token from referrer
+                val token = InstallReferrerHelper.extractTokenFromReferrer(referrerUrl, tokenKey)
+                
+                if (token == null) {
+                    Log.d(TAG, "No token found in install referrer: $referrerUrl")
+                    callback?.invoke(Result.failure(Exception("No token found in install referrer")))
+                    return@launch
+                }
+                
+                Log.d(TAG, "Token extracted from install referrer: $token")
+                
+                // Get deferred deep link using the token
+                val result = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getDeferredDeepLinkByToken(token)
+                }
+                
+                Log.d(TAG, "Deferred deep link retrieved from install referrer")
+                callback?.invoke(Result.success(result))
+                
+            } catch (e: Exception) {
+                Log.e(TAG, "Error occurred while getting deferred deep link from install referrer", e)
+                callback?.invoke(Result.failure(e))
+            }
+        }
+    }
 } 
