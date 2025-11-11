@@ -3,7 +3,6 @@ package org.limelink.limelink_aos_sdk.service.limelink
 import org.limelink.limelink_aos_sdk.request.LimeLinkRequest
 import org.limelink.limelink_aos_sdk.response.UniversalLinkResponse
 import org.limelink.limelink_aos_sdk.response.DeeplinkResponse
-import org.limelink.limelink_aos_sdk.response.GetDeferredDeepLinkByTokenResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -46,11 +45,12 @@ interface ApiService {
     suspend fun getUniversalLink(@Path("suffix") suffix: String): UniversalLinkResponse
     
     /**
-     * Get deferred deep link by token
+     * Get deferred deep link by suffix (for Install Referrer)
      * Used when app is launched for the first time after installation
-     * @param token Token
-     * @return GetDeferredDeepLinkByTokenResponse Deferred deep link information
+     * Calls the same API as universal link: /api/v1/app/dynamic_link/{suffix}
+     * @param suffix Suffix from Install Referrer code parameter
+     * @return UniversalLinkResponse URI information for redirection
      */
-    @GET("/api/v1/deferred-deep-link/token/{token}")
-    suspend fun getDeferredDeepLinkByToken(@Path("token") token: String): GetDeferredDeepLinkByTokenResponse
+    @GET("/api/v1/app/dynamic_link/{suffix}")
+    suspend fun getDeferredDeepLinkBySuffix(@Path("suffix") suffix: String): UniversalLinkResponse
 }

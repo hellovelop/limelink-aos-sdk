@@ -263,15 +263,14 @@ Deferred Deep Link is useful for:
 - Redirecting users to specific content after app installation
 - Measuring marketing campaign effectiveness
 
-> **Note**: Deferred deep links are created and managed through the [LimeLink Console](https://limelink.org). The SDK only provides functionality to retrieve deferred deep link information when the app is launched for the first time after installation.
+> **Note**: Deferred deep links are created and managed through the [LimeLink Console](https://limelink.org). The SDK provides functionality to retrieve deferred deep link information when the app is launched for the first time after installation using Install Referrer API.
 
-### Get Deferred Deep Link by Token (First Launch)
+### Deferred Deep Link Usage
 
-This is the most important method for deferred deep links. Use it when the app is launched for the first time after installation to retrieve the stored link information:
+Use this when the app is launched for the first time after installation. The SDK calls the same API as Universal Link (`/api/v1/app/dynamic_link/{suffix}`) and returns the URI for redirection.
 
 ```kt
 import org.limelink.limelink_aos_sdk.LimeLinkSDK
-import org.limelink.limelink_aos_sdk.response.GetDeferredDeepLinkByTokenResponse
 
 class MainActivity : AppCompatActivity() {
     
@@ -281,48 +280,35 @@ class MainActivity : AppCompatActivity() {
         
         // Check if this is the first launch
         if (isFirstLaunch()) {
-            // Get the token from your tracking system or URL
-            val token = getTokenFromInstallSource() // You need to implement this
+            // Get the suffix from Install Referrer API
+            // Install Referrer provides code={suffix} parameter
+            val suffix = getSuffixFromInstallReferrer() // You need to implement this
             
-            // Retrieve deferred deep link information
-            LimeLinkSDK.getDeferredDeepLinkByToken(token) { result ->
-                result.onSuccess { response ->
-                    // Handle the deferred deep link
-                    response.parameters?.let { params ->
-                        // Navigate to specific screen based on parameters
-                        val campaign = params["campaign"] as? String
-                        val page = params["page"] as? String
+            if (suffix != null) {
+                // Handle deferred deep link
+                LimeLinkSDK.handleDeferredDeepLink(suffix) { uri ->
+                    if (uri != null) {
+                        // Handle success - you can now use the URI as needed
+                        println("Deferred Deep Link URI: $uri")
                         
-                        when (page) {
-                            "product-detail" -> {
-                                // Navigate to product detail page
-                                navigateToProductDetail(params)
-                            }
-                            "home" -> {
-                                // Navigate to home with campaign info
-                                navigateToHome(campaign)
-                            }
-                            else -> {
-                                // Default navigation
-                                navigateToDefault()
-                            }
-                        }
+                        // Example: Navigate to the URI
+                        // navigateToUri(uri)
+                        
+                        // Example: Open in browser
+                        // openInBrowser(uri)
+                        
+                        // Example: Parse and handle internally
+                        // handleInternalNavigation(uri)
+                    } else {
+                        // Handle failure
+                        println("Deferred Deep Link handling failed")
+                        // Proceed with normal app launch
+                        navigateToDefault()
                     }
-                    
-                    // You can also use the store URLs if needed
-                    response.androidPlayStoreUrl?.let { playStoreUrl ->
-                        // Handle Play Store URL if needed
-                    }
-                    
-                    response.fallbackUrl?.let { fallbackUrl ->
-                        // Handle fallback URL if needed
-                    }
-                }.onFailure { error ->
-                    // Token not found or error occurred
-                    println("No deferred deep link found or error: ${error.message}")
-                    // Proceed with normal app launch
-                    navigateToDefault()
                 }
+            } else {
+                // No suffix found in install referrer
+                navigateToDefault()
             }
         } else {
             // Normal app launch
@@ -333,16 +319,35 @@ class MainActivity : AppCompatActivity() {
     private fun isFirstLaunch(): Boolean {
         // Implement your first launch detection logic
         // You can use SharedPreferences or other methods
-        return true // Placeholder
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isFirst = prefs.getBoolean("is_first_launch", true)
+        if (isFirst) {
+            prefs.edit().putBoolean("is_first_launch", false).apply()
+        }
+        return isFirst
     }
     
-    private fun getTokenFromInstallSource(): String {
-        // Implement logic to get token from:
-        // - Install referrer
-        // - URL parameters
-        // - Tracking system
-        // - etc.
-        return "your-token" // Placeholder
+    private fun getSuffixFromInstallReferrer(): String? {
+        // Implement logic to get suffix from Install Referrer API
+        // Install Referrer provides code={suffix} parameter
+        // Example using Play Install Referrer Library:
+        /*
+        val referrerClient = InstallReferrerClient.newBuilder(this).build()
+        referrerClient.startConnection(object : InstallReferrerStateListener {
+            override fun onInstallReferrerSetupFinished(responseCode: Int) {
+                when (responseCode) {
+                    InstallReferrerClient.InstallReferrerResponse.OK -> {
+                        val response = referrerClient.installReferrer
+                        val referrerUrl = response.installReferrer
+                        // Parse code={suffix} from referrerUrl
+                        // Return the suffix value
+                    }
+                }
+            }
+            override fun onInstallReferrerServiceDisconnected() {}
+        })
+        */
+        return null // Placeholder - implement your logic
     }
 }
 ```
@@ -350,17 +355,71 @@ class MainActivity : AppCompatActivity() {
 ### Deferred Deep Link Flow
 
 1. **User clicks a link** before installing the app
-2. **Link redirects to app store** (Play Store or App Store)
+2. **Link redirects to app store** (Play Store or App Store) with `code={suffix}` parameter
 3. **User installs and opens the app**
-4. **App retrieves the token** from install referrer or tracking system
-5. **App calls `getDeferredDeepLinkByToken()`** with the token
-6. **SDK returns stored parameters** and URLs
-7. **App navigates to the appropriate screen** based on the parameters
+4. **App retrieves the suffix** from Install Referrer API (`code={suffix}`)
+5. **App calls `handleDeferredDeepLink(suffix)`** with the suffix
+6. **SDK calls `/api/v1/app/dynamic_link/{suffix}`** (same as Universal Link)
+7. **SDK returns URI** from API response
+8. **App navigates to the URI** or handles it as needed
+
+### Install Referrer Setup
+
+To use Deferred Deep Link, you need to integrate the Play Install Referrer Library:
+
+1. **Add dependency** to your `build.gradle`:
+```gradle
+dependencies {
+    implementation 'com.android.installreferrer:installreferrer:2.2'
+}
+```
+
+2. **Get the suffix** from Install Referrer:
+```kt
+import com.android.installreferrer.api.InstallReferrerClient
+import com.android.installreferrer.api.InstallReferrerStateListener
+
+val referrerClient = InstallReferrerClient.newBuilder(context).build()
+referrerClient.startConnection(object : InstallReferrerStateListener {
+    override fun onInstallReferrerSetupFinished(responseCode: Int) {
+        when (responseCode) {
+            InstallReferrerClient.InstallReferrerResponse.OK -> {
+                val response = referrerClient.installReferrer
+                val referrerUrl = response.installReferrer
+                // Parse code={suffix} from referrerUrl
+                // Example: "code=abc123" -> extract "abc123"
+                val suffix = extractSuffixFromReferrer(referrerUrl)
+                suffix?.let {
+                    LimeLinkSDK.handleDeferredDeepLink(it) { uri ->
+                        // Handle the URI
+                    }
+                }
+            }
+        }
+        referrerClient.endConnection()
+    }
+    
+    override fun onInstallReferrerServiceDisconnected() {
+        // Handle disconnection
+    }
+})
+
+private fun extractSuffixFromReferrer(referrerUrl: String): String? {
+    // Parse code={suffix} parameter from referrer URL
+    val params = referrerUrl.split("&")
+    for (param in params) {
+        if (param.startsWith("code=")) {
+            return param.substring(5) // Remove "code=" prefix
+        }
+    }
+    return null
+}
+```
 
 ### Best Practices
 
-- **Token Management**: Use unique, meaningful tokens for each campaign
-- **Error Handling**: Always handle the case where a token is not found
 - **First Launch Detection**: Properly detect first app launch to avoid unnecessary API calls
-- **Parameter Validation**: Validate and sanitize parameters before using them
-- **Fallback URLs**: Always provide fallback URLs for better user experience
+- **Error Handling**: Always handle the case where suffix is not found or API call fails
+- **Install Referrer**: Use Play Install Referrer Library for reliable referrer information
+- **URI Handling**: Validate and sanitize the received URI before using it
+- **Fallback**: Always provide a fallback navigation path when deferred deep link is not available
