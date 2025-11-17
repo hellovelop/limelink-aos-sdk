@@ -183,7 +183,7 @@ class MainActivity : AppCompatActivity() {
 1. User clicks a URL in the format `https://{suffix}.limelink.org/link/{link_suffix}`
 2. SDK extracts the `{suffix}` and `{link_suffix}` parts from the URL
 3. Fetches headers from `https://{suffix}.limelink.org` for additional context
-4. Calls the API `https://www.limelink.org/api/v1/dynamic_link/{link_suffix}` with headers
+4. Calls the API `https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix}` with headers
 5. Receives `uri` from API response and automatically redirects to that URL
 6. If link_suffix is not found or uri is missing, returns 404 error
 

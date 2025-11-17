@@ -15,7 +15,7 @@ import java.util.regex.Pattern
 /**
  * Class responsible for handling Universal Links
  * Processes URLs in the format https://{suffix}.limelink.org/link/{link_suffix} by
- * calling the API https://www.limelink.org/api/v1/dynamic_link/{link_suffix} and
+ * calling the API https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix} and
  * redirecting to the received uri.
  * Also supports legacy deeplink format for backward compatibility.
  */

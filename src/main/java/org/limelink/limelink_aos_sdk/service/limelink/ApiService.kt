@@ -19,7 +19,7 @@ interface ApiService {
      * @param linkSuffix Dynamic link suffix
      * @return UniversalLinkResponse URL information for redirection
      */
-    @GET("/api/v1/dynamic_link/{linkSuffix}")
+    @GET("/api/v1/app/dynamic_link/{linkSuffix}")
     suspend fun getUniversalLinkNew(@Path("linkSuffix") linkSuffix: String): UniversalLinkResponse
     
     /**
