@@ -49,8 +49,14 @@ interface ApiService {
      * Used when app is launched for the first time after installation
      * Calls the same API as universal link: /api/v1/app/dynamic_link/{suffix}
      * @param suffix Suffix from Install Referrer code parameter
+     * @param fullRequestUrl Full request URL from Install Referrer (optional)
+     * @param eventType Event type (default: "setup")
      * @return UniversalLinkResponse URI information for redirection
      */
     @GET("/api/v1/app/dynamic_link/{suffix}")
-    suspend fun getDeferredDeepLinkBySuffix(@Path("suffix") suffix: String): UniversalLinkResponse
+    suspend fun getDeferredDeepLinkBySuffix(
+        @Path("suffix") suffix: String,
+        @Query("full_request_url") fullRequestUrl: String? = null,
+        @Query("event_type") eventType: String = "setup"
+    ): UniversalLinkResponse
 }

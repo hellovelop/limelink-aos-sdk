@@ -267,7 +267,7 @@ Deferred Deep Link is useful for:
 
 ### Deferred Deep Link Usage
 
-Use this when the app is launched for the first time after installation. The SDK calls the same API as Universal Link (`/api/v1/app/dynamic_link/{suffix}`) and returns the URI for redirection.
+Use this when the app is launched for the first time after installation. The SDK calls `/api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup` and returns the URI for redirection.
 
 ```kt
 import org.limelink.limelink_aos_sdk.LimeLinkSDK
@@ -280,13 +280,17 @@ class MainActivity : AppCompatActivity() {
         
         // Check if this is the first launch
         if (isFirstLaunch()) {
-            // Get the suffix from Install Referrer API
-            // Install Referrer provides code={suffix} parameter
-            val suffix = getSuffixFromInstallReferrer() // You need to implement this
+            // Get the suffix and full_request_url from Install Referrer API
+            // Install Referrer provides code={suffix}&full_request_url={full_request_url} parameters
+            val (suffix, fullRequestUrl) = getDeferredDeepLinkParams() // You need to implement this
             
             if (suffix != null) {
                 // Handle deferred deep link
-                LimeLinkSDK.handleDeferredDeepLink(suffix) { uri ->
+                // API will be called as: /api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup
+                LimeLinkSDK.handleDeferredDeepLink(
+                    suffix = suffix,
+                    fullRequestUrl = fullRequestUrl
+                ) { uri ->
                     if (uri != null) {
                         // Handle success - you can now use the URI as needed
                         println("Deferred Deep Link URI: $uri")
@@ -327,9 +331,9 @@ class MainActivity : AppCompatActivity() {
         return isFirst
     }
     
-    private fun getSuffixFromInstallReferrer(): String? {
-        // Implement logic to get suffix from Install Referrer API
-        // Install Referrer provides code={suffix} parameter
+    private fun getDeferredDeepLinkParams(): Pair<String?, String?> {
+        // Implement logic to get suffix and full_request_url from Install Referrer API
+        // Install Referrer provides code={suffix}&full_request_url={full_request_url} parameters
         // Example using Play Install Referrer Library:
         /*
         val referrerClient = InstallReferrerClient.newBuilder(this).build()
@@ -339,15 +343,16 @@ class MainActivity : AppCompatActivity() {
                     InstallReferrerClient.InstallReferrerResponse.OK -> {
                         val response = referrerClient.installReferrer
                         val referrerUrl = response.installReferrer
-                        // Parse code={suffix} from referrerUrl
-                        // Return the suffix value
+                        // Parse code={suffix} and full_request_url={full_request_url} from referrerUrl
+                        // Example: "code=abc123&full_request_url=https://example.com" -> extract "abc123" and "https://example.com"
+                        // Return Pair(suffix, fullRequestUrl)
                     }
                 }
             }
             override fun onInstallReferrerServiceDisconnected() {}
         })
         */
-        return null // Placeholder - implement your logic
+        return Pair(null, null) // Placeholder - implement your logic
     }
 }
 ```
@@ -355,11 +360,11 @@ class MainActivity : AppCompatActivity() {
 ### Deferred Deep Link Flow
 
 1. **User clicks a link** before installing the app
-2. **Link redirects to app store** (Play Store or App Store) with `code={suffix}` parameter
+2. **Link redirects to app store** (Play Store or App Store) with `code={suffix}&full_request_url={full_request_url}` parameters
 3. **User installs and opens the app**
-4. **App retrieves the suffix** from Install Referrer API (`code={suffix}`)
-5. **App calls `handleDeferredDeepLink(suffix)`** with the suffix
-6. **SDK calls `/api/v1/app/dynamic_link/{suffix}`** (same as Universal Link)
+4. **App retrieves the suffix and full_request_url** from Install Referrer API (`code={suffix}&full_request_url={full_request_url}`)
+5. **App calls `handleDeferredDeepLink(suffix, fullRequestUrl)`** with the suffix and full_request_url
+6. **SDK calls `/api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup`**
 7. **SDK returns URI** from API response
 8. **App navigates to the URI** or handles it as needed
 
@@ -374,7 +379,7 @@ dependencies {
 }
 ```
 
-2. **Get the suffix** from Install Referrer:
+2. **Get the suffix and full_request_url** from Install Referrer:
 ```kt
 import com.android.installreferrer.api.InstallReferrerClient
 import com.android.installreferrer.api.InstallReferrerStateListener
@@ -386,11 +391,14 @@ referrerClient.startConnection(object : InstallReferrerStateListener {
             InstallReferrerClient.InstallReferrerResponse.OK -> {
                 val response = referrerClient.installReferrer
                 val referrerUrl = response.installReferrer
-                // Parse code={suffix} from referrerUrl
-                // Example: "code=abc123" -> extract "abc123"
-                val suffix = extractSuffixFromReferrer(referrerUrl)
+                // Parse code={suffix} and full_request_url={full_request_url} from referrerUrl
+                // Example: "code=abc123&full_request_url=https://example.com" -> extract "abc123" and "https://example.com"
+                val (suffix, fullRequestUrl) = extractParamsFromReferrer(referrerUrl)
                 suffix?.let {
-                    LimeLinkSDK.handleDeferredDeepLink(it) { uri ->
+                    LimeLinkSDK.handleDeferredDeepLink(
+                        suffix = it,
+                        fullRequestUrl = fullRequestUrl
+                    ) { uri ->
                         // Handle the URI
                     }
                 }
@@ -404,15 +412,24 @@ referrerClient.startConnection(object : InstallReferrerStateListener {
     }
 })
 
-private fun extractSuffixFromReferrer(referrerUrl: String): String? {
-    // Parse code={suffix} parameter from referrer URL
+private fun extractParamsFromReferrer(referrerUrl: String): Pair<String?, String?> {
+    // Parse code={suffix} and full_request_url={full_request_url} parameters from referrer URL
     val params = referrerUrl.split("&")
+    var suffix: String? = null
+    var fullRequestUrl: String? = null
+    
     for (param in params) {
-        if (param.startsWith("code=")) {
-            return param.substring(5) // Remove "code=" prefix
+        when {
+            param.startsWith("code=") -> {
+                suffix = param.substring(5) // Remove "code=" prefix
+            }
+            param.startsWith("full_request_url=") -> {
+                fullRequestUrl = param.substring(17) // Remove "full_request_url=" prefix
+            }
         }
     }
-    return null
+    
+    return Pair(suffix, fullRequestUrl)
 }
 ```
 

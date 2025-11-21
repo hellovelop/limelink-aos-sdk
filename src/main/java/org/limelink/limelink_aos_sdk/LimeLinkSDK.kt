@@ -103,22 +103,29 @@ object LimeLinkSDK {
     
     /**
      * Handles deferred deep link from Install Referrer.
-     * When Install Referrer API provides code={suffix}, this method calls
-     * https://limelink.org/api/v1/app/dynamic_link/{suffix} and returns the URI for redirection.
+     * When Install Referrer API provides code={suffix} and full_request_url={full_request_url},
+     * this method calls https://limelink.org/api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup
+     * and returns the URI for redirection.
      * 
      * @param suffix Suffix from Install Referrer code parameter
+     * @param fullRequestUrl Full request URL from Install Referrer (optional)
      * @param callback Callback to receive result with URI (optional)
      */
     fun handleDeferredDeepLink(
         suffix: String,
+        fullRequestUrl: String? = null,
         callback: ((String?) -> Unit)? = null
     ) {
-        Log.d(TAG, "Starting Deferred Deep Link processing with suffix: $suffix")
+        Log.d(TAG, "Starting Deferred Deep Link processing with suffix: $suffix, fullRequestUrl: $fullRequestUrl")
         
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    RetrofitClient.apiService.getDeferredDeepLinkBySuffix(suffix)
+                    RetrofitClient.apiService.getDeferredDeepLinkBySuffix(
+                        suffix = suffix,
+                        fullRequestUrl = fullRequestUrl,
+                        eventType = "setup"
+                    )
                 }
                 
                 Log.d(TAG, "Deferred Deep Link processing completed: ${result.uri}")
