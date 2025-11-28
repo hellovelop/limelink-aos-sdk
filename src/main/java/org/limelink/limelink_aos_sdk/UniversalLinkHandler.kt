@@ -81,11 +81,17 @@ object UniversalLinkHandler {
         val linkSuffix = matcher.group(1) ?: return null
         Log.d(TAG, "Extracted suffix: $suffix, linkSuffix: $linkSuffix")
         
+        // 원본 URL의 full URL 추출 (쿼리스트링 포함)
+        val fullRequestUrl = uri.toString()
+        
+        // 원본 URL의 쿼리 파라미터 추출
+        val queryParams = extractQueryParams(uri)
+        
         // 먼저 서브도메인에서 헤더 정보 가져오기
         val headers = fetchSubdomainHeaders(suffix)
         
-        // 헤더 정보를 사용하여 Universal Link API 호출
-        return fetchUniversalLinkWithHeaders(linkSuffix, headers)
+        // 헤더 정보를 사용하여 Universal Link API 호출 (fullRequestUrl과 쿼리 파라미터 포함)
+        return fetchUniversalLinkWithHeaders(linkSuffix, headers, fullRequestUrl, queryParams)
     }
     
     /**
@@ -140,14 +146,37 @@ object UniversalLinkHandler {
     }
     
     /**
+     * 쿼리 파라미터 추출
+     */
+    private fun extractQueryParams(uri: Uri): Map<String, String> {
+        val queryParams = mutableMapOf<String, String>()
+        val queryParameterNames = uri.queryParameterNames
+        queryParameterNames.forEach { paramName ->
+            uri.getQueryParameter(paramName)?.let { paramValue ->
+                queryParams[paramName] = paramValue
+            }
+        }
+        return queryParams
+    }
+    
+    /**
      * 헤더 정보를 포함한 Universal Link API 호출
      */
-    private suspend fun fetchUniversalLinkWithHeaders(linkSuffix: String, _headers: Map<String, String>): String? {
+    private suspend fun fetchUniversalLinkWithHeaders(
+        linkSuffix: String, 
+        _headers: Map<String, String>,
+        fullRequestUrl: String? = null,
+        queryParams: Map<String, String> = emptyMap()
+    ): String? {
         try {
-            Log.d(TAG, "Calling Universal Link API with linkSuffix: $linkSuffix")
+            Log.d(TAG, "Calling Universal Link API with linkSuffix: $linkSuffix, fullRequestUrl: $fullRequestUrl, queryParams: $queryParams")
             
             val response = withContext(Dispatchers.IO) {
-                RetrofitClient.apiService.getUniversalLinkNew(linkSuffix)
+                RetrofitClient.apiService.getUniversalLinkNew(
+                    linkSuffix = linkSuffix,
+                    fullRequestUrl = fullRequestUrl,
+                    queryParams = if (queryParams.isNotEmpty()) queryParams else null
+                )
             }
             
             Log.d(TAG, "Received URI: ${response.uri}")

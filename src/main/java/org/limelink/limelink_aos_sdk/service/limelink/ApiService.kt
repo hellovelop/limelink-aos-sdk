@@ -8,6 +8,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
 interface ApiService {
 
@@ -17,10 +18,16 @@ interface ApiService {
     /**
      * Universal Link API endpoint (새로운 방식)
      * @param linkSuffix Dynamic link suffix
+     * @param fullRequestUrl Full request URL from the original Universal Link (optional)
+     * @param queryParams Additional query parameters from the original URL (optional)
      * @return UniversalLinkResponse URL information for redirection
      */
     @GET("/api/v1/app/dynamic_link/{linkSuffix}")
-    suspend fun getUniversalLinkNew(@Path("linkSuffix") linkSuffix: String): UniversalLinkResponse
+    suspend fun getUniversalLinkNew(
+        @Path("linkSuffix") linkSuffix: String,
+        @Query("full_request_url") fullRequestUrl: String? = null,
+        @QueryMap queryParams: Map<String, String>? = null
+    ): UniversalLinkResponse
     
     /**
      * Deeplink API endpoint

@@ -180,12 +180,14 @@ class MainActivity : AppCompatActivity() {
 ```
 
 ### Universal Link Flow
-1. User clicks a URL in the format `https://{suffix}.limelink.org/link/{link_suffix}`
+1. User clicks a URL in the format `https://{suffix}.limelink.org/link/{link_suffix}?test=1&value=2` 
 2. SDK extracts the `{suffix}` and `{link_suffix}` parts from the URL
-3. Fetches headers from `https://{suffix}.limelink.org` for additional context
-4. Calls the API `https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix}` with headers
-5. Receives `uri` from API response and automatically redirects to that URL
-6. If link_suffix is not found or uri is missing, returns 404 error
+3. SDK extracts the full original URL (including query parameters) as `full_request_url`
+4. SDK extracts all query parameters from the original URL
+5. Fetches headers from `https://{suffix}.limelink.org` for additional context
+6. Calls the API `https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix}?full_request_url={full_request_url}&test=1&value=2` with headers, full_request_url, and all query parameters
+7. Receives `uri` from API response and automatically redirects to that URL
+8. If link_suffix is not found or uri is missing, returns 404 error
 
 ### Legacy Deeplink Support
 For backward compatibility, the SDK also supports the legacy deeplink format:
