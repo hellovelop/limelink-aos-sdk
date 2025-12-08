@@ -29,15 +29,11 @@ object UniversalLinkHandler {
      * Handles Universal Link and returns the URI for redirection.
      * @param context Android context
      * @param intent Universal Link intent
+     * @param uri URI from intent (pre-extracted for safety)
      * @return URI to redirect to, or null if processing failed
      */
-    suspend fun handleUniversalLink(_context: Context, intent: Intent): String? {
+    suspend fun handleUniversalLink(_context: Context, intent: Intent, uri: Uri): String? {
         return try {
-            val uri = intent.data ?: run {
-                Log.e(TAG, "No data in intent")
-                return null
-            }
-            
             val host = uri.host ?: run {
                 Log.e(TAG, "No host in URI")
                 return null

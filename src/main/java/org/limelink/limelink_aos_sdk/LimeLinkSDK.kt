@@ -38,13 +38,21 @@ object LimeLinkSDK {
             return
         }
         
-        Log.d(TAG, "Starting Universal Link processing")
+        // Intent.data를 미리 추출하여 비동기 처리 시 안전하게 전달
+        val uri = intent.data
+        if (uri == null) {
+            Log.e(TAG, "Intent data is null even though isUniversalLink returned true")
+            callback?.invoke(null)
+            return
+        }
+        
+        Log.d(TAG, "Starting Universal Link processing with URI: $uri")
         
         // Process in background
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    UniversalLinkHandler.handleUniversalLink(context, intent)
+                    UniversalLinkHandler.handleUniversalLink(context, intent, uri)
                 }
                 
                 Log.d(TAG, "Universal Link processing completed: $result")
