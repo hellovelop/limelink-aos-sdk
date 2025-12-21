@@ -195,29 +195,6 @@ For backward compatibility, the SDK also supports the legacy deeplink format:
 2. SDK calls the API `https://deep.limelink.org/link` with query parameters
 3. Receives `deeplinkUrl` from API response and redirects accordingly
 
-### Save statistical information
-Open ***MainActivity.kt*** and add the following code
-```kt
-package com.example.myapp
-
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import org.limelink.limelink_aos_sdk.LinkStats
-
-class MainActivity : AppCompatActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        /*Example*/
-        val privateKey = "your_private_key"
-        saveLimeLinkStatus(this, intent, privateKey)
-    }
-}
-```
-- This way, you can save information about the first run or relaunch of the app. You can check the actual metrics on the https://limelink.org console.
-- The privateKey value is required. If you don't have it, obtain it from the https://limelink.org console and use it.
 
 ### Use handle information superficially
 Open ***MainActivity.kt*** and add the following code
