@@ -1,0 +1,6 @@
+# LimeLink SDK Configuration
+# Copy this file to limelink.properties and fill in your values
+LIMELINK_API_KEY=your_api_key_here
+LIMELINK_PROJECT_ID=your_project_id_here
+LIMELINK_CUSTOM_DOMAIN=your_subdomain.limelink.org
+LIMELINK_ANDROID_APPLICATION_ID=com.example.limelink

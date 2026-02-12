@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">LimeLink Demo</string>
+    <string name="card_config_title">Settings &amp; Config</string>
+    <string name="card_deeplink_title">Deeplink Info</string>
+    <string name="card_deferred_title">Deferred Deeplink</string>
+    <string name="card_simulation_title">URL Simulation</string>
+    <string name="card_stats_title">Stats</string>
+    <string name="card_log_title">Logs</string>
+    <string name="btn_check_referrer">Check Install Referrer</string>
+    <string name="btn_simulate">Simulate URL</string>
+    <string name="btn_send_stats">Send Stats</string>
+    <string name="btn_clear_logs">Clear Logs</string>
+    <string name="label_api_key">API Key</string>
+    <string name="label_project_id">Project ID</string>
+    <string name="label_custom_domain">Custom Domain</string>
+    <string name="label_app_id">Application ID</string>
+    <string name="label_no_deeplink">No deeplink received yet</string>
+    <string name="label_no_referrer">No referrer data</string>
+    <string name="hint_simulate_url">Enter URL to simulate</string>
+</resources>
