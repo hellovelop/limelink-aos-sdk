@@ -1,13 +1,13 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
-    id 'com.android.library' version '8.1.1'
-    id 'org.jetbrains.kotlin.android' version '1.9.23'
+    id 'com.android.library' version '8.7.0'
+    id 'org.jetbrains.kotlin.android' version '2.0.0'
     id 'maven-publish'
 }
 
 android {
     namespace 'org.limelink.limelink_aos_sdk'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         minSdk 24
@@ -68,8 +68,8 @@ dependencies {
     
     // Coroutines library for Universal Link processing
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-    
-    // Play Install Referrer API
+
+    // Install Referrer for deferred deeplink
     implementation 'com.android.installreferrer:installreferrer:2.2'
 }
 
