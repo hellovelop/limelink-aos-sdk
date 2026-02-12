@@ -48,6 +48,10 @@ interface ApiService {
      * @param suffix Dynamic link suffix
      * @return UniversalLinkResponse URL information for redirection
      */
+    @Deprecated(
+        message = "Use getUniversalLinkNew() with /api/v1/app/dynamic_link/{linkSuffix} endpoint instead.",
+        replaceWith = ReplaceWith("getUniversalLinkNew(suffix)")
+    )
     @GET("/universal-link/app/dynamic_link/{suffix}")
     suspend fun getUniversalLink(@Path("suffix") suffix: String): UniversalLinkResponse
     

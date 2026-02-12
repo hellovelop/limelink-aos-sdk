@@ -173,6 +173,10 @@ object LimeLinkSDK {
      * @param intent Universal Link intent
      * @param callback Callback to receive processing result with URI (optional)
      */
+    @Deprecated(
+        message = "Use LimeLinkSDK.init() + addLinkListener() for automatic lifecycle handling.",
+        replaceWith = ReplaceWith("LimeLinkSDK.init(application, config); LimeLinkSDK.addLinkListener(listener)")
+    )
     fun handleUniversalLink(
         context: Context,
         intent: Intent,
@@ -223,6 +227,10 @@ object LimeLinkSDK {
      * @param intent Intent
      * @return Extracted URL or null
      */
+    @Deprecated(
+        message = "Use LimeLinkResult.originalUrl from LimeLinkListener instead.",
+        replaceWith = ReplaceWith("LimeLinkResult.originalUrl")
+    )
     fun getSchemeFromIntent(intent: Intent): String? {
         return UrlHandler.getSchemeFromIntent(intent)
     }
@@ -232,6 +240,10 @@ object LimeLinkSDK {
      * @param intent Intent
      * @return Parsed query parameters map
      */
+    @Deprecated(
+        message = "Use LimeLinkResult.queryParams from LimeLinkListener instead.",
+        replaceWith = ReplaceWith("LimeLinkResult.queryParams")
+    )
     fun parseQueryParams(intent: Intent): Map<String, String> {
         return UrlHandler.parseQueryParams(intent)
     }
@@ -241,6 +253,10 @@ object LimeLinkSDK {
      * @param intent Intent
      * @return Parsed path parameters response
      */
+    @Deprecated(
+        message = "Use LimeLinkResult.pathParams from LimeLinkListener instead.",
+        replaceWith = ReplaceWith("LimeLinkResult.pathParams")
+    )
     fun parsePathParams(intent: Intent): PathParamResponse {
         return UrlHandler.parsePathParams(intent)
     }
