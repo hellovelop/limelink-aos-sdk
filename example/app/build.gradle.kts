@@ -56,7 +56,7 @@ android {
 
 dependencies {
     // Limelink SDK - from Maven Local
-    implementation("org.limelink:limelink_aos_sdk:0.0.1")
+    implementation("org.limelink:limelink_aos_sdk:0.1.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

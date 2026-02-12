@@ -81,13 +81,13 @@ afterEvaluate{
                 from components.release
                 groupId = 'org.limelink'
                 artifactId = 'limelink_aos_sdk'
-                version = '0.0.1'
+                version = '0.1.0'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId = 'org.limelink'
                 artifactId = 'limelink_aos_sdk'
-                version = '0.0.1'
+                version = '0.1.0'
             }
         }
     }
