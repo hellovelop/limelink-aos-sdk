@@ -5,16 +5,28 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://limelink.org/"
+    private var baseUrl: String = "https://limelink.org/"
+    private var retrofitInstance: Retrofit? = null
+    private var apiServiceInstance: ApiService? = null
 
-    val instance: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    fun initialize(url: String) {
+        baseUrl = url
+        retrofitInstance = null
+        apiServiceInstance = null
     }
 
-    val apiService: ApiService by lazy {
-        instance.create(ApiService::class.java)
-    }
+    val instance: Retrofit
+        get() {
+            return retrofitInstance ?: Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .also { retrofitInstance = it }
+        }
+
+    val apiService: ApiService
+        get() {
+            return apiServiceInstance ?: instance.create(ApiService::class.java)
+                .also { apiServiceInstance = it }
+        }
 }

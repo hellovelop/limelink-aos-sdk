@@ -7,10 +7,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.limelink.limelink_aos_sdk.service.RetrofitClient
-import org.limelink.limelink_aos_sdk.response.UniversalLinkResponse
-import org.limelink.limelink_aos_sdk.response.DeeplinkResponse
 import retrofit2.HttpException
-import java.util.regex.Pattern
 
 /**
  * Class responsible for handling Universal Links
@@ -64,30 +61,21 @@ object UniversalLinkHandler {
         
         // URL 경로에서 link_suffix 추출 (/link/{link_suffix} 패턴)
         val path = uri.path ?: return null
-        val linkPattern = "^/link/(.+)$"
-        
-        val pattern = Pattern.compile(linkPattern)
-        val matcher = pattern.matcher(path)
-        
-        if (!matcher.find()) {
-            Log.e(TAG, "❌ 서브도메인 패턴이 일치하지 않습니다: $path")
+        if (!path.startsWith("/link/")) {
+            Log.e(TAG, "서브도메인 패턴이 일치하지 않습니다: $path")
             return null
         }
-        
-        val linkSuffix = matcher.group(1) ?: return null
+        val linkSuffix = path.removePrefix("/link/")
         Log.d(TAG, "Extracted suffix: $suffix, linkSuffix: $linkSuffix")
         
         // 원본 URL의 full URL 추출 (쿼리스트링 포함)
         val fullRequestUrl = uri.toString()
         
         // 원본 URL의 쿼리 파라미터 추출
-        val queryParams = extractQueryParams(uri)
-        
-        // 먼저 서브도메인에서 헤더 정보 가져오기
-        val headers = fetchSubdomainHeaders(suffix)
-        
-        // 헤더 정보를 사용하여 Universal Link API 호출 (fullRequestUrl과 쿼리 파라미터 포함)
-        return fetchUniversalLinkWithHeaders(linkSuffix, headers, fullRequestUrl, queryParams)
+        val queryParams = uri.queryParameterNames.associateWith { uri.getQueryParameter(it) ?: "" }
+
+        // Universal Link API 호출 (fullRequestUrl과 쿼리 파라미터 포함)
+        return fetchUniversalLink(linkSuffix, fullRequestUrl, queryParams)
     }
     
     /**
@@ -122,45 +110,10 @@ object UniversalLinkHandler {
     }
     
     /**
-     * 서브도메인 헤더 정보 가져오기
+     * Universal Link API 호출
      */
-    private suspend fun fetchSubdomainHeaders(suffix: String): Map<String, String> {
-        return try {
-            val urlString = "https://$suffix.$LIMELINK_HOST"
-            Log.d(TAG, "Fetching headers from: $urlString")
-            
-            // 간단한 헤더 정보 반환 (실제 구현에서는 OkHttp의 HEAD 요청 사용)
-            mapOf(
-                "X-Request-ID" to "android-${System.currentTimeMillis()}",
-                "X-User-Agent" to "LimeLink-Android-SDK",
-                "X-Referer" to "https://$suffix.$LIMELINK_HOST"
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error fetching subdomain headers", e)
-            emptyMap()
-        }
-    }
-    
-    /**
-     * 쿼리 파라미터 추출
-     */
-    private fun extractQueryParams(uri: Uri): Map<String, String> {
-        val queryParams = mutableMapOf<String, String>()
-        val queryParameterNames = uri.queryParameterNames
-        queryParameterNames.forEach { paramName ->
-            uri.getQueryParameter(paramName)?.let { paramValue ->
-                queryParams[paramName] = paramValue
-            }
-        }
-        return queryParams
-    }
-    
-    /**
-     * 헤더 정보를 포함한 Universal Link API 호출
-     */
-    private suspend fun fetchUniversalLinkWithHeaders(
-        linkSuffix: String, 
-        _headers: Map<String, String>,
+    private suspend fun fetchUniversalLink(
+        linkSuffix: String,
         fullRequestUrl: String? = null,
         queryParams: Map<String, String> = emptyMap()
     ): String? {

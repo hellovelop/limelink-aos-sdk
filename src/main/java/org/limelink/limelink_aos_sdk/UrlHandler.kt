@@ -25,53 +25,26 @@ object UrlHandler {
         }
     }
 
+    private fun resolveUri(intent: Intent): Uri? {
+        val url = getSchemeFromIntent(intent) ?: getUrlFromIntent(intent)
+        if (url.isNullOrEmpty()) return null
+        return Uri.parse(url)
+    }
+
     fun parseQueryParams(intent: Intent): Map<String, String> {
-        // 먼저 original-url 파라미터에서 URL을 추출 시도
-        var url = UrlHandler.getSchemeFromIntent(intent)
-        
-        // original-url이 없으면 Intent에서 직접 URL 추출 시도
-        if (url.isNullOrEmpty()) {
-            url = getUrlFromIntent(intent)
-        }
-        
-        if (url.isNullOrEmpty()) {
-            return emptyMap()
-        }
-
-        val uri = Uri.parse(url)
-        val queryParameterNames = uri.queryParameterNames
-        val queryParams = mutableMapOf<String, String>()
-
-        for (param in queryParameterNames) {
-            uri.getQueryParameter(param)?.let {
-                queryParams[param] = it
-            }
-        }
-        
-        return queryParams
+        val uri = resolveUri(intent) ?: return emptyMap()
+        return uri.queryParameterNames.associateWith { uri.getQueryParameter(it) ?: "" }
     }
 
     fun parsePathParams(intent: Intent): PathParamResponse {
-        // 먼저 original-url 파라미터에서 URL을 추출 시도
-        var url = UrlHandler.getSchemeFromIntent(intent)
-        
-        // original-url이 없으면 Intent에서 직접 URL 추출 시도
-        if (url.isNullOrEmpty()) {
-            url = getUrlFromIntent(intent)
-        }
-        
-        if (url.isNullOrEmpty()) {
-            return PathParamResponse(mainPath = "", subPath = "")
-        }
-        
-        val uri = Uri.parse(url)
+        val uri = resolveUri(intent) ?: return PathParamResponse(mainPath = "", subPath = "")
         val pathSegments = uri.pathSegments
-        
+
         // pathSegments[0] = "link", pathSegments[1] = "toggle-reward" 등
         // mainPath는 pathSegments[1] (두 번째 요소), subPath는 pathSegments[2] (세 번째 요소, 있을 경우)
         val mainPath = pathSegments.getOrNull(1) ?: ""
         val subPath = pathSegments.getOrNull(2)
-        
+
         return PathParamResponse(mainPath = mainPath, subPath = subPath)
     }
 }

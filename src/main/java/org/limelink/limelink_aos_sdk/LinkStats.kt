@@ -24,7 +24,12 @@ object LinkStats {
     }
 }
 
+@Deprecated("Use LimeLinkSDK.init() for automatic tracking")
 suspend fun saveLimeLinkStatus(context: Context, intent: Intent, privateKey: String) {
+    internalSaveLimeLinkStatus(context, intent, privateKey)
+}
+
+internal suspend fun internalSaveLimeLinkStatus(context: Context, intent: Intent, apiKey: String) {
     val pathParamResponse: PathParamResponse = parsePathParams(intent)
 
     if (pathParamResponse.mainPath.isEmpty()) {
@@ -32,7 +37,7 @@ suspend fun saveLimeLinkStatus(context: Context, intent: Intent, privateKey: Str
     }
 
     val eventType = if (LinkStats.isFirstLaunch(context)) EventType.FIRST_RUN else EventType.RERUN
-    val limeLinkRequest = createLimeLinkRequest(privateKey, pathParamResponse, eventType)
+    val limeLinkRequest = createLimeLinkRequest(apiKey, pathParamResponse, eventType)
 
     sendLimeLinkAsync(limeLinkRequest)
 }
@@ -56,10 +61,8 @@ private suspend fun sendLimeLinkAsync(limeLinkRequest: LimeLinkRequest) {
     try {
         withContext(Dispatchers.IO) {
             apiService.sendLimeLink(limeLinkRequest)
-            // 네트워크 요청 성공, 응답값을 신경 쓰지 않음
         }
     } catch (e: Exception) {
-        // 네트워크 요청 실패 처리
         e.printStackTrace()
     }
 }
