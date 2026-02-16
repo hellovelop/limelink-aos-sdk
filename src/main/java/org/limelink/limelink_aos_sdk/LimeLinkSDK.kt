@@ -146,10 +146,11 @@ object LimeLinkSDK {
         log("First launch detected, checking deferred deeplink")
         InstallReferrerHandler.getInstallReferrer(context) { referrerInfo ->
             if (referrerInfo?.limeLinkUrl != null) {
+                val limeLinkUrl = referrerInfo.limeLinkUrl
                 val result = LimeLinkResult(
-                    originalUrl = referrerInfo.limeLinkUrl,
-                    resolvedUri = Uri.parse(referrerInfo.limeLinkUrl),
-                    queryParams = emptyMap(),
+                    originalUrl = limeLinkUrl.fullUrl,
+                    resolvedUri = Uri.parse(limeLinkUrl.fullUrl),
+                    queryParams = limeLinkUrl.queryParams,
                     pathParams = PathParamResponse(mainPath = "", subPath = null),
                     isDeferred = true,
                     referrerInfo = referrerInfo

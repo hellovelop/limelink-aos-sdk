@@ -124,7 +124,7 @@ object UniversalLinkHandler {
                 RetrofitClient.apiService.getUniversalLinkNew(
                     linkSuffix = linkSuffix,
                     fullRequestUrl = fullRequestUrl,
-                    queryParams = if (queryParams.isNotEmpty()) queryParams else null
+                    queryParams = queryParams
                 )
             }
             

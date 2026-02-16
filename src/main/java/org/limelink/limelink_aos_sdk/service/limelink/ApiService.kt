@@ -26,7 +26,7 @@ interface ApiService {
     suspend fun getUniversalLinkNew(
         @Path("linkSuffix") linkSuffix: String,
         @Query("full_request_url") fullRequestUrl: String? = null,
-        @QueryMap queryParams: Map<String, String>? = null
+        @QueryMap queryParams: Map<String, String> = emptyMap()
     ): UniversalLinkResponse
     
     /**
