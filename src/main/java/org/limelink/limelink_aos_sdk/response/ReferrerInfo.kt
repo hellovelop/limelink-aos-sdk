@@ -4,5 +4,6 @@ data class ReferrerInfo(
     val referrerUrl: String?,
     val clickTimestamp: Long,
     val installTimestamp: Long,
-    val limeLinkUrl: LimeLinkUrl?
+    val limeLinkUrl: String?,
+    val limeLinkDetail: LimeLinkUrl? = null
 )

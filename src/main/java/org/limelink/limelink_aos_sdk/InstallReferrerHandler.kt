@@ -28,13 +28,14 @@ internal object InstallReferrerHandler {
                                 val referrerUrl = response.installReferrer
                                 val clickTimestamp = response.referrerClickTimestampSeconds
                                 val installTimestamp = response.installBeginTimestampSeconds
-                                val limeLinkUrl = extractLimeLinkUrl(referrerUrl)
+                                val limeLinkDetail = extractLimeLinkUrlDetail(referrerUrl)
 
                                 val referrerInfo = ReferrerInfo(
                                     referrerUrl = referrerUrl,
                                     clickTimestamp = clickTimestamp,
                                     installTimestamp = installTimestamp,
-                                    limeLinkUrl = limeLinkUrl
+                                    limeLinkUrl = limeLinkDetail?.fullUrl,
+                                    limeLinkDetail = limeLinkDetail
                                 )
 
                                 callback(referrerInfo)
@@ -70,7 +71,11 @@ internal object InstallReferrerHandler {
         }
     }
 
-    internal fun extractLimeLinkUrl(referrerString: String?): LimeLinkUrl? {
+    internal fun extractLimeLinkUrl(referrerString: String?): String? {
+        return extractLimeLinkUrlDetail(referrerString)?.fullUrl
+    }
+
+    internal fun extractLimeLinkUrlDetail(referrerString: String?): LimeLinkUrl? {
         if (referrerString.isNullOrBlank()) return null
 
         return try {

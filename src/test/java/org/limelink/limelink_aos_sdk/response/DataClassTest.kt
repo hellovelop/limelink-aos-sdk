@@ -97,7 +97,7 @@ class DataClassTest {
 
     @Test
     fun `ReferrerInfo creation with all fields`() {
-        val limeLinkUrl = LimeLinkUrl(
+        val detail = LimeLinkUrl(
             referrer = "ref",
             url = "https://limelink.org/abc",
             fullUrl = "https://limelink.org/abc",
@@ -108,13 +108,28 @@ class DataClassTest {
             referrerUrl = "https://example.com",
             clickTimestamp = 1000L,
             installTimestamp = 2000L,
-            limeLinkUrl = limeLinkUrl
+            limeLinkUrl = "https://limelink.org/abc",
+            limeLinkDetail = detail
         )
 
         assertEquals("https://example.com", info.referrerUrl)
         assertEquals(1000L, info.clickTimestamp)
         assertEquals(2000L, info.installTimestamp)
-        assertEquals("https://limelink.org/abc", info.limeLinkUrl?.fullUrl)
+        assertEquals("https://limelink.org/abc", info.limeLinkUrl)
+        assertEquals("https://limelink.org/abc", info.limeLinkDetail?.fullUrl)
+    }
+
+    @Test
+    fun `ReferrerInfo limeLinkDetail defaults to null`() {
+        val info = ReferrerInfo(
+            referrerUrl = "https://example.com",
+            clickTimestamp = 1000L,
+            installTimestamp = 2000L,
+            limeLinkUrl = "https://limelink.org/abc"
+        )
+
+        assertEquals("https://limelink.org/abc", info.limeLinkUrl)
+        assertNull(info.limeLinkDetail)
     }
 
     @Test
@@ -128,6 +143,7 @@ class DataClassTest {
 
         assertNull(info.referrerUrl)
         assertNull(info.limeLinkUrl)
+        assertNull(info.limeLinkDetail)
     }
 
     // --- LimeLinkError ---
