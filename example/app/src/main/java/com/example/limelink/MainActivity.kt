@@ -8,13 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
@@ -26,8 +24,6 @@ import org.limelink.limelink_aos_sdk.LimeLinkSDK
 import org.limelink.limelink_aos_sdk.response.LimeLinkError
 import org.limelink.limelink_aos_sdk.response.LimeLinkResult
 import org.limelink.limelink_aos_sdk.response.ReferrerInfo
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -38,7 +34,6 @@ class MainActivity : ComponentActivity() {
     private val logEntries = mutableStateListOf<LogEntry>()
     private val deeplinkResult = mutableStateOf<LimeLinkResult?>(null)
     private val referrerResult = mutableStateOf<ReferrerInfo?>(null)
-    private val currentIntent = mutableStateOf<Intent?>(null)
 
     private val linkListener = object : LimeLinkListener {
         override fun onDeeplinkReceived(result: LimeLinkResult) {
@@ -60,7 +55,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         LimeLinkSDK.addLinkListener(linkListener)
-        currentIntent.value = intent
         addLog("App created")
 
         enableEdgeToEdge()
@@ -72,7 +66,6 @@ class MainActivity : ComponentActivity() {
                     referrerResult = referrerResult,
                     onCheckReferrer = ::checkReferrer,
                     onSimulateUrl = ::simulateUrl,
-                    onSendStats = ::sendStats,
                     onClearLogs = ::clearLogs
                 )
             }
@@ -82,7 +75,6 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        currentIntent.value = intent
         addLog("onNewIntent: ${intent.dataString}")
     }
 
@@ -99,6 +91,12 @@ class MainActivity : ComponentActivity() {
                 addLog("Referrer: ${info.referrerUrl}")
                 addLog("  click: ${info.clickTimestamp}, install: ${info.installTimestamp}")
                 addLog("  limeLinkUrl: ${info.limeLinkUrl}")
+                val detail = info.limeLinkDetail
+                if (detail != null) {
+                    addLog("  limeLinkDetail.url: ${detail.url}")
+                    addLog("  limeLinkDetail.queryString: ${detail.queryString}")
+                    addLog("  limeLinkDetail.queryParams: ${detail.queryParams}")
+                }
             } else {
                 addLog("No referrer info available")
             }
@@ -112,42 +110,15 @@ class MainActivity : ComponentActivity() {
         val isUl = LimeLinkSDK.isUniversalLink(simulatedIntent)
         addLog("  isUniversalLink: $isUl")
 
-        val scheme = LimeLinkSDK.getSchemeFromIntent(simulatedIntent)
-        addLog("  scheme: $scheme")
-
-        val queryParams = LimeLinkSDK.parseQueryParams(simulatedIntent)
-        addLog("  queryParams: $queryParams")
-
-        val pathParams = LimeLinkSDK.parsePathParams(simulatedIntent)
-        addLog("  pathParams: main=${pathParams.mainPath}, sub=${pathParams.subPath}")
-
         if (isUl) {
-            LimeLinkSDK.handleUniversalLink(this, simulatedIntent) { result ->
-                addLog("  handleUniversalLink result: $result")
+            addLog("  Launching via lifecycle handler...")
+            val launchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                setClass(this@MainActivity, MainActivity::class.java)
+                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             }
-        }
-    }
-
-    private fun sendStats() {
-        addLog("Sending stats (via legacy saveLimeLinkStatus)...")
-        val intent = currentIntent.value
-        if (intent?.data != null) {
-            addLog("  Using current intent: ${intent.dataString}")
-            MainScope().launch {
-                try {
-                    @Suppress("DEPRECATION")
-                    org.limelink.limelink_aos_sdk.saveLimeLinkStatus(
-                        this@MainActivity,
-                        intent,
-                        BuildConfig.LIMELINK_API_KEY
-                    )
-                    addLog("  Stats sent successfully")
-                } catch (e: Exception) {
-                    addLog("  Stats error: ${e.message}")
-                }
-            }
+            startActivity(launchIntent)
         } else {
-            addLog("  No intent data to send stats for")
+            addLog("  Not a Universal Link, skipping")
         }
     }
 
@@ -169,7 +140,6 @@ fun MainScreen(
     referrerResult: State<ReferrerInfo?>,
     onCheckReferrer: () -> Unit,
     onSimulateUrl: (String) -> Unit,
-    onSendStats: () -> Unit,
     onClearLogs: () -> Unit
 ) {
     Scaffold(
@@ -202,10 +172,7 @@ fun MainScreen(
             // Card 4: URL Simulation
             item { SimulationCard(onSimulateUrl) }
 
-            // Card 5: Stats
-            item { StatsCard(onSendStats) }
-
-            // Card 6: Logs
+            // Card 5: Logs
             item { LogCard(logEntries, onClearLogs) }
         }
     }
@@ -251,6 +218,12 @@ fun DeferredDeeplinkCard(info: ReferrerInfo?, onCheck: () -> Unit) {
             InfoRow("Click TS", info.clickTimestamp.toString())
             InfoRow("Install TS", info.installTimestamp.toString())
             InfoRow("LimeLink URL", info.limeLinkUrl ?: "-")
+            val detail = info.limeLinkDetail
+            if (detail != null) {
+                InfoRow("Detail URL", detail.url)
+                InfoRow("Query String", detail.queryString ?: "-")
+                InfoRow("Query Params", detail.queryParams.takeIf { it.isNotEmpty() }?.toString() ?: "-")
+            }
         } else {
             Text(
                 text = stringResource(R.string.label_no_referrer),
@@ -282,20 +255,6 @@ fun SimulationCard(onSimulate: (String) -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = { onSimulate(url) }, modifier = Modifier.fillMaxWidth()) {
             Text(stringResource(R.string.btn_simulate))
-        }
-    }
-}
-
-@Composable
-fun StatsCard(onSend: () -> Unit) {
-    DemoCard(title = stringResource(R.string.card_stats_title)) {
-        Text(
-            text = "Send stats event using current intent data",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onSend, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(R.string.btn_send_stats))
         }
     }
 }
