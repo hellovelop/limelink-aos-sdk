@@ -61,10 +61,10 @@ dependencyResolutionManagement {
 ### Step 2: Add the dependency
 ```gradle
 dependencies {
-    implementation 'com.github.hellovelope:limelink-aos-sdk:main'
+    implementation 'com.github.hellovelope:limelink-aos-sdk:0.1.0'
 }
 ```
-- Please refer to [*here](https://jitpack.io/#hellovelope/limelink-aos-sdk/0.0.3) for **maven**, **sbt**, or **leiningen**.
+- Please refer to [*here](https://jitpack.io/#hellovelope/limelink-aos-sdk/0.1.0) for **maven**, **sbt**, or **leiningen**.
 
 ### Step 3: Manifest file configuration
 In the AndroidManifest.xml file, add an intent filter to the MainActivity to handle URLs like schem://example
@@ -98,324 +98,123 @@ If it's completed, let's refer to the SDK Usage Guide and create it.
 
 # SDK Usage Guide
 
-## Universal Link Handling
+> 상세 가이드는 [docs/SDK_GUIDE.md](docs/SDK_GUIDE.md)를 참조하세요.
 
-### Universal Link Setup
-Add the following configuration to your AndroidManifest.xml to handle Universal Links:
+## Quick Start
+
+### 1. SDK 초기화
+
+`Application` 클래스에서 한 번만 호출합니다.
+
+```kt
+import org.limelink.limelink_aos_sdk.LimeLinkSDK
+import org.limelink.limelink_aos_sdk.config.LimeLinkConfig
+
+class MyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        val config = LimeLinkConfig.Builder("YOUR_API_KEY")
+            .setLogging(true)                    // 디버그 로그 (기본: false)
+            .setDeferredDeeplinkEnabled(true)     // Deferred Deeplink 자동 체크 (기본: true)
+            .build()
+
+        LimeLinkSDK.init(this, config)
+    }
+}
+```
+
+### 2. 딥링크 수신 (Listener)
+
+`init()` 호출 후 Lifecycle 자동 감지가 활성화되므로, 리스너만 등록하면 됩니다.
+
+```kt
+import org.limelink.limelink_aos_sdk.LimeLinkListener
+import org.limelink.limelink_aos_sdk.LimeLinkSDK
+import org.limelink.limelink_aos_sdk.response.LimeLinkResult
+import org.limelink.limelink_aos_sdk.response.LimeLinkError
+
+class MainActivity : ComponentActivity() {
+
+    private val linkListener = object : LimeLinkListener {
+        override fun onDeeplinkReceived(result: LimeLinkResult) {
+            val uri = result.resolvedUri           // API가 해석한 최종 URI
+            val isDeferred = result.isDeferred     // Deferred Deeplink 여부
+            val query = result.queryParams         // 쿼리 파라미터 맵
+            val mainPath = result.pathParams.mainPath
+            val subPath = result.pathParams.subPath
+
+            // 앱 내 화면 이동 등 처리
+        }
+
+        override fun onDeeplinkError(error: LimeLinkError) {
+            Log.e("Deeplink", "[${error.code}] ${error.message}")
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        LimeLinkSDK.addLinkListener(linkListener)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)  // Activity의 intent 갱신
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LimeLinkSDK.removeLinkListener(linkListener)
+    }
+}
+```
+
+### 3. AndroidManifest 설정
 
 ```xml
-<activity android:name=".MainActivity">
+<activity
+    android:name=".MainActivity"
+    android:exported="true"
+    android:launchMode="singleTop">
+
     <intent-filter android:autoVerify="true">
-        <action android:name="android.intent.action.VIEW"/>
-        <category android:name="android.intent.category.DEFAULT"/>
-        <category android:name="android.intent.category.BROWSABLE"/>
-        <data android:scheme="https" android:host="*.limelink.org"/>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:scheme="https"
+            android:host="*.limelink.org"
+            android:pathPrefix="/link/" />
     </intent-filter>
 </activity>
 ```
 
-### Universal Link Usage
-How to handle Universal Links in MainActivity:
+## Universal Link Flow
 
-```kt
-package com.example.myapp
-
-import android.content.Intent
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import org.limelink.limelink_aos_sdk.LimeLinkSDK
-
-class MainActivity : AppCompatActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        
-        // Handle Universal Link in onCreate
-        handleIntent(intent)
-    }
-    
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        
-        // Handle Universal Link in onNewIntent (when app is already running)
-        intent?.let { handleIntent(it) }
-    }
-    
-    private fun handleIntent(intent: Intent) {
-        // Check if it's a Universal Link and handle it
-        if (LimeLinkSDK.isUniversalLink(intent)) {
-            LimeLinkSDK.handleUniversalLink(this, intent) { uri ->
-                if (uri != null) {
-                    // Handle success - you can now use the URI as needed
-                    println("Universal Link URI: $uri")
-                    
-                    // Example: Navigate to the URI
-                    // navigateToUri(uri)
-                    
-                    // Example: Open in browser
-                    // openInBrowser(uri)
-                    
-                    // Example: Parse and handle internally
-                    // handleInternalNavigation(uri)
-                } else {
-                    // Handle failure
-                    println("Universal Link handling failed")
-                }
-            }
-        } else {
-            // Handle regular intent
-            handleCustomScheme(intent)
-        }
-    }
-    
-    private fun handleCustomScheme(intent: Intent) {
-        // Handle existing custom scheme
-        val originalUrl = LimeLinkSDK.getSchemeFromIntent(intent)
-        originalUrl?.let {
-            // URL processing logic
-        }
-    }
-}
-```
-
-### Universal Link Flow
-1. User clicks a URL in the format `https://{suffix}.limelink.org/link/{link_suffix}?test=1&value=2` 
-2. SDK extracts the `{suffix}` and `{link_suffix}` parts from the URL
+1. User clicks a URL in the format `https://{subdomain}.limelink.org/link/{link_suffix}?key1=val1&key2=val2`
+2. SDK extracts the `{subdomain}` and `{link_suffix}` parts from the URL
 3. SDK extracts the full original URL (including query parameters) as `full_request_url`
-4. SDK extracts all query parameters from the original URL
-5. Fetches headers from `https://{suffix}.limelink.org` for additional context
-6. Calls the API `https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix}?full_request_url={full_request_url}&test=1&value=2` with headers, full_request_url, and all query parameters
-7. Receives `uri` from API response and automatically redirects to that URL
-8. If link_suffix is not found or uri is missing, returns 404 error
-
-### Legacy Deeplink Support
-For backward compatibility, the SDK also supports the legacy deeplink format:
-1. User clicks a URL in the format `https://deep.limelink.org/link/subdomain={subdomain}&path={path}&platform=android`
-2. SDK calls the API `https://deep.limelink.org/link` with query parameters
-3. Receives `deeplinkUrl` from API response and redirects accordingly
-
-
-### Use handle information superficially
-Open ***MainActivity.kt*** and add the following code
-
-```kt
-package com.example.myapp
-
-import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
-import org.limelink.limelink_aos_sdk.response.PathParamResponse
-
-class MainActivity : AppCompatActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        
-        handleIntent(intent)
-    }
-
-    private fun handleIntent(intent: Intent) {
-        /*Example*/
-        val pathParamResponse: PathParamResponse = UrlHandler.parsePathParams(intent)
-        val suffix: String = pathParamResponse.getMainPath()
-
-        /*Use the handle values to navigate to the desired screen. */
-        val handle: String = pathParamResponse.getSubPath()
-        if (handle == "example") {
-            //Navigate to the desired screen
-        }
-    }
-}
-```
-- This way, you can handle the information superficially and navigate to the desired screen based on the handle value.
+4. Calls the API `https://www.limelink.org/api/v1/app/dynamic_link/{link_suffix}?full_request_url={full_request_url}&key1=val1&key2=val2` with all query parameters
+5. Receives `uri` from API response
+6. Delivers the result via `LimeLinkListener.onDeeplinkReceived()`
 
 ## Deferred Deep Link
 
-Deferred Deep Link allows you to track and handle deep links even when the app is not installed. When a user clicks a link before installing the app, the link information is stored and can be retrieved after the app is installed and launched for the first time.
+앱 설치 전 클릭한 링크를 설치 후 첫 실행 시 복원합니다.
 
-### Deferred Deep Link Overview
-
-Deferred Deep Link is useful for:
-- Tracking user acquisition sources
-- Providing personalized onboarding experiences
-- Redirecting users to specific content after app installation
-- Measuring marketing campaign effectiveness
-
-> **Note**: Deferred deep links are created and managed through the [LimeLink Console](https://limelink.org). The SDK provides functionality to retrieve deferred deep link information when the app is launched for the first time after installation using Install Referrer API.
-
-### Deferred Deep Link Usage
-
-Use this when the app is launched for the first time after installation. The SDK calls `/api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup` and returns the URI for redirection.
+- `LimeLinkConfig.deferredDeeplinkEnabled = true` (기본값)이면 `init()` 시 자동으로 Install Referrer를 확인
+- 첫 실행 여부는 SDK가 `SharedPreferences`로 자동 관리
+- 결과는 `LimeLinkListener.onDeeplinkReceived()`로 전달 (`result.isDeferred == true`)
 
 ```kt
-import org.limelink.limelink_aos_sdk.LimeLinkSDK
-
-class MainActivity : AppCompatActivity() {
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        
-        // Check if this is the first launch
-        if (isFirstLaunch()) {
-            // Get the suffix and full_request_url from Install Referrer API
-            // Install Referrer provides code={suffix}&full_request_url={full_request_url} parameters
-            val (suffix, fullRequestUrl) = getDeferredDeepLinkParams() // You need to implement this
-            
-            if (suffix != null) {
-                // Handle deferred deep link
-                // API will be called as: /api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup
-                LimeLinkSDK.handleDeferredDeepLink(
-                    suffix = suffix,
-                    fullRequestUrl = fullRequestUrl
-                ) { uri ->
-                    if (uri != null) {
-                        // Handle success - you can now use the URI as needed
-                        println("Deferred Deep Link URI: $uri")
-                        
-                        // Example: Navigate to the URI
-                        // navigateToUri(uri)
-                        
-                        // Example: Open in browser
-                        // openInBrowser(uri)
-                        
-                        // Example: Parse and handle internally
-                        // handleInternalNavigation(uri)
-                    } else {
-                        // Handle failure
-                        println("Deferred Deep Link handling failed")
-                        // Proceed with normal app launch
-                        navigateToDefault()
-                    }
-                }
-            } else {
-                // No suffix found in install referrer
-                navigateToDefault()
-            }
-        } else {
-            // Normal app launch
-            navigateToDefault()
-        }
-    }
-    
-    private fun isFirstLaunch(): Boolean {
-        // Implement your first launch detection logic
-        // You can use SharedPreferences or other methods
-        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val isFirst = prefs.getBoolean("is_first_launch", true)
-        if (isFirst) {
-            prefs.edit().putBoolean("is_first_launch", false).apply()
-        }
-        return isFirst
-    }
-    
-    private fun getDeferredDeepLinkParams(): Pair<String?, String?> {
-        // Implement logic to get suffix and full_request_url from Install Referrer API
-        // Install Referrer provides code={suffix}&full_request_url={full_request_url} parameters
-        // Example using Play Install Referrer Library:
-        /*
-        val referrerClient = InstallReferrerClient.newBuilder(this).build()
-        referrerClient.startConnection(object : InstallReferrerStateListener {
-            override fun onInstallReferrerSetupFinished(responseCode: Int) {
-                when (responseCode) {
-                    InstallReferrerClient.InstallReferrerResponse.OK -> {
-                        val response = referrerClient.installReferrer
-                        val referrerUrl = response.installReferrer
-                        // Parse code={suffix} and full_request_url={full_request_url} from referrerUrl
-                        // Example: "code=abc123&full_request_url=https://example.com" -> extract "abc123" and "https://example.com"
-                        // Return Pair(suffix, fullRequestUrl)
-                    }
-                }
-            }
-            override fun onInstallReferrerServiceDisconnected() {}
-        })
-        */
-        return Pair(null, null) // Placeholder - implement your logic
+override fun onDeeplinkReceived(result: LimeLinkResult) {
+    if (result.isDeferred) {
+        // 앱 설치 후 첫 실행 - 설치 전 클릭한 링크 복원
+        val referrer = result.referrerInfo
+        Log.d("Deferred", "referrer url: ${referrer?.limeLinkUrl}")
+        Log.d("Deferred", "query params: ${referrer?.limeLinkDetail?.queryParams}")
     }
 }
 ```
 
-### Deferred Deep Link Flow
-
-1. **User clicks a link** before installing the app
-2. **Link redirects to app store** (Play Store or App Store) with `code={suffix}&full_request_url={full_request_url}` parameters
-3. **User installs and opens the app**
-4. **App retrieves the suffix and full_request_url** from Install Referrer API (`code={suffix}&full_request_url={full_request_url}`)
-5. **App calls `handleDeferredDeepLink(suffix, fullRequestUrl)`** with the suffix and full_request_url
-6. **SDK calls `/api/v1/app/dynamic_link/{suffix}?full_request_url={full_request_url}&event_type=setup`**
-7. **SDK returns URI** from API response
-8. **App navigates to the URI** or handles it as needed
-
-### Install Referrer Setup
-
-To use Deferred Deep Link, you need to integrate the Play Install Referrer Library:
-
-1. **Add dependency** to your `build.gradle`:
-```gradle
-dependencies {
-    implementation 'com.android.installreferrer:installreferrer:2.2'
-}
-```
-
-2. **Get the suffix and full_request_url** from Install Referrer:
-```kt
-import com.android.installreferrer.api.InstallReferrerClient
-import com.android.installreferrer.api.InstallReferrerStateListener
-
-val referrerClient = InstallReferrerClient.newBuilder(context).build()
-referrerClient.startConnection(object : InstallReferrerStateListener {
-    override fun onInstallReferrerSetupFinished(responseCode: Int) {
-        when (responseCode) {
-            InstallReferrerClient.InstallReferrerResponse.OK -> {
-                val response = referrerClient.installReferrer
-                val referrerUrl = response.installReferrer
-                // Parse code={suffix} and full_request_url={full_request_url} from referrerUrl
-                // Example: "code=abc123&full_request_url=https://example.com" -> extract "abc123" and "https://example.com"
-                val (suffix, fullRequestUrl) = extractParamsFromReferrer(referrerUrl)
-                suffix?.let {
-                    LimeLinkSDK.handleDeferredDeepLink(
-                        suffix = it,
-                        fullRequestUrl = fullRequestUrl
-                    ) { uri ->
-                        // Handle the URI
-                    }
-                }
-            }
-        }
-        referrerClient.endConnection()
-    }
-    
-    override fun onInstallReferrerServiceDisconnected() {
-        // Handle disconnection
-    }
-})
-
-private fun extractParamsFromReferrer(referrerUrl: String): Pair<String?, String?> {
-    // Parse code={suffix} and full_request_url={full_request_url} parameters from referrer URL
-    val params = referrerUrl.split("&")
-    var suffix: String? = null
-    var fullRequestUrl: String? = null
-    
-    for (param in params) {
-        when {
-            param.startsWith("code=") -> {
-                suffix = param.substring(5) // Remove "code=" prefix
-            }
-            param.startsWith("full_request_url=") -> {
-                fullRequestUrl = param.substring(17) // Remove "full_request_url=" prefix
-            }
-        }
-    }
-    
-    return Pair(suffix, fullRequestUrl)
-}
-```
-
-### Best Practices
-
-- **First Launch Detection**: Properly detect first app launch to avoid unnecessary API calls
-- **Error Handling**: Always handle the case where suffix is not found or API call fails
-- **Install Referrer**: Use Play Install Referrer Library for reliable referrer information
-- **URI Handling**: Validate and sanitize the received URI before using it
-- **Fallback**: Always provide a fallback navigation path when deferred deep link is not available
+> Install Referrer 상세 정보, 수동 호출 방법 등은 [docs/SDK_GUIDE.md](docs/SDK_GUIDE.md) 참조.

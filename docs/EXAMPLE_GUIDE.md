@@ -73,7 +73,7 @@ cd example/
 
 ## 3. 앱 화면 구성
 
-앱은 6개의 카드로 구성된 단일 화면입니다.
+앱은 5개의 카드로 구성된 단일 화면입니다.
 
 ### 3.1 Config Card
 
@@ -108,20 +108,14 @@ Install Referrer 정보를 표시합니다.
 
 ### 3.4 Simulation Card
 
-URL을 직접 입력하여 SDK 파싱 결과를 테스트합니다.
+URL을 직접 입력하여 Universal Link 감지 및 처리를 테스트합니다.
 
 - 기본값: `https://smaxh.limelink.org/link/test-suffix`
 - URL을 입력하고 **Simulate** 버튼 클릭
-- `isUniversalLink`, `scheme`, `queryParams`, `pathParams` 결과 출력
-- Universal Link이면 `handleUniversalLink`까지 자동 호출
+- `isUniversalLink` 결과 출력
+- Universal Link이면 lifecycle handler를 통해 자동 처리 (Activity 재실행)
 
-### 3.5 Stats Card
-
-현재 intent 데이터로 통계 이벤트를 전송합니다.
-
-- **Send Stats** 버튼: `saveLimeLinkStatus()` (deprecated API) 호출 테스트
-
-### 3.6 Log Card
+### 3.5 Log Card
 
 모든 SDK 이벤트와 동작 로그를 시간순(최신순)으로 표시합니다.
 

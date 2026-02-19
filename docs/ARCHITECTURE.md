@@ -65,6 +65,7 @@ LimeLinkSDK (Facade / Singleton)
 │   ├── LimeLinkResult          통합 결과 모델
 │   ├── LimeLinkError           에러 모델
 │   ├── ReferrerInfo            리퍼러 정보
+│   ├── LimeLinkUrl             리퍼러 URL 상세 구조
 │   ├── PathParamResponse       경로 파라미터
 │   ├── UniversalLinkResponse   API 응답 (uri)
 │   └── DeeplinkResponse        API 응답 (deeplinkUrl)
@@ -224,7 +225,7 @@ notifyListeners() → 앱의 onDeeplinkReceived() 호출
 | 11 | `build.gradle.kts` | BuildConfig 필드 4개 주입 |
 | 12 | `AndroidManifest.xml` | intent-filter, INTERNET 권한, Application 클래스 |
 | 13 | `LimeLinkDemoApp.kt` (신규) | `LimeLinkSDK.init()` 호출 |
-| 14 | `strings.xml` | UI 문자열 리소스 17개 |
-| 15 | `MainActivity.kt` (재작성) | 6-카드 데모 UI (Compose + Material3) |
+| 14 | `strings.xml` | UI 문자열 리소스 15개 |
+| 15 | `MainActivity.kt` (재작성) | 5-카드 데모 UI (Compose + Material3) |
 
 **핵심 원칙**: 기존 public API 5개 메서드 시그니처 100% 하위 호환 유지
